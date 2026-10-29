@@ -93,6 +93,14 @@ label.field{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 
 nav button{min-width:0}nav button b{padding:3px 12px;max-width:100%}.row>input{min-width:0;flex:1}#cb input{min-width:0}
+
+/* header icons, group switcher, story add button */
+.iconbtn{position:relative;width:40px;height:40px;min-height:40px;padding:0;border-radius:50%;border:1px solid var(--bd);background:var(--card);color:var(--tx);display:grid;place-items:center;cursor:pointer;flex:none}
+.iconbtn svg{width:20px;height:20px;display:block}
+.iconbtn .badge{position:absolute;top:-5px;right:-5px}
+.groupbtn{min-width:0;max-width:46vw;flex:0 1 auto;font-size:14px;font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.groupbtn #groupName{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.story.addstory{display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;width:auto;height:auto;min-height:42px;align-self:center;padding:8px 16px;border-radius:22px;font-size:14px;font-weight:600;color:var(--ac)}
 </style></head><body>
 <div id="app"></div><div id="toast" role="status" aria-live="polite"></div><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -109,7 +117,7 @@ login:'Prijava|Log in',signup:'Registracija|Sign up',email:'E-pošta|Email',pw:'
 code:'Vabilna koda (neobvezno)|Invite code (optional)',sub:'Majhen krog. Pravi prijatelji.|Small circle. Real friends.',
 pend:'Prošnja čaka na odobritev administratorja.|Your request is waiting for admin approval.',rejected:'Dostop ni odobren. Obrni se na administratorja.|Access is not approved. Contact the administrator.',
 out:'Odjava|Log out',lang:'Jezik|Language',theme:'Tema|Theme',mem:'Člani|Members',inv:'Vabilna koda|Invite code',
-approve:'Odobri|Approve',reject:'Zavrni / odstrani|Reject / remove',full:'Krog je poln (20 članov).|The circle is full (20 members).',
+approve:'Odobri|Approve',reject:'Zavrni / odstrani|Reject / remove',full:'Skupina je polna (20 članov).|The group is full (20 members).',
 del:'Izbrišem? Tega ni mogoče razveljaviti.|Delete? This cannot be undone.',cm:'Komentar…|Comment…',ask:'Prošnje za vstop|Join requests',nc:'Nova koda|New code',
 inst:'Namesti|Install',ih:'iPhone: Safari → Deli → Dodaj na začetni zaslon. Android: meni → Namesti aplikacijo.|iPhone: Safari → Share → Add to Home Screen. Android: menu → Install app.',
 go:'Nadaljuj|Continue',past:'Pretekli dogodki|Past events',copy:'Kopiraj|Copy',cp:'Kopirano|Copied',now:'zdaj|now',
@@ -133,7 +141,7 @@ daily7:'Kaj bi rad počel ta vikend?|What would you like to do this weekend?',cu
 story:'Zgodba · 24 h|Story · 24 h',storyHint:'Kratek utrinek. Po 24 urah ni več viden.|A quick moment. No longer visible after 24 hours.',
 anonHint:'En glas, brez sprememb. Objavljeni so samo seštevki. Pri majhni skupini je mogoče glas sklepati iz časa spremembe.|One vote, no changes. Only totals are published. In a small group, timing may reveal a vote.',
 voted:'Glas je oddan|Vote submitted',results:'Rezultati|Results',vote:'Glasuj|Vote',
-tools:'Skupaj lažje|Easier together',expenses:'Stroški|Expenses',lists:'Skupni seznami|Shared lists',amount:'Znesek EUR|Amount EUR',paid:'Plačal/-a|Paid by',
+tools:'Orodja skupine|Group tools',expenses:'Stroški|Expenses',lists:'Skupni seznami|Shared lists',amount:'Znesek EUR|Amount EUR',paid:'Plačal/-a|Paid by',
 forWho:'Razdeli enako med|Split equally among',expenseTitle:'Za kaj?|What for?',settle:'Kdo komu dolguje|Who owes whom',
 balanced:'Stanje je poravnano.|All balanced.',expenseHint:'Izračun zajema naložene stroške. Nakazila dogovorite zunaj aplikacije.|Calculation includes loaded expenses. Arrange transfers outside the app.',
 listTitle:'Ime seznama|List name',item:'Dodaj opravilo ali stvar|Add a task or item',unassigned:'Brez dodelitve|Unassigned',add:'Dodaj|Add',
@@ -145,18 +153,26 @@ newpost:'Nova objava|New post',newcomment:'Komentar na tvojo objavo|Comment on y
 mention:'Omenjen/-a si|You were mentioned',newevent:'Nov dogodek|New event',unread:'Neprebrano|Unread',readall:'Označi kot prebrano|Mark as read',
 welcome:'Dobrodošel v Krogu|Welcome to Krog',welcomeBody:'Za začetek povej nekaj o sebi, odgovori na vprašanje dneva ali deli droben trenutek. En stavek je dovolj. Objave vidijo samo aktivni člani.|Start with your profile, answer today’s question or share a small moment. One sentence is enough. Only active members see posts.',
 start:'Gremo|Let’s go',export:'Izvozi arhiv|Export archive',exportHint:'Arhiv vsebuje profile, objave, sezname, stroške in skupinski klepet. Brez zasebnih pogovorov in zasebnih glasov.|Archive includes profiles, posts, lists, expenses and group chat. No private conversations or private ballots.',
-migrate:'Zavaruj obstoječe članstvo|Secure existing membership',migrateHint:'Administrator mora enkrat potrditi seznam obstoječih aktivnih članov (največ 20). Podatki ostanejo na mestu.|An administrator must confirm the existing active roster once (up to 20). Existing data stays in place.',
+migrate:'Prenesi obstoječi krog|Move existing circle',migrateHint:'Administrator enkrat prenese obstoječi krog v novo zgradbo skupin. Stari podatki ostanejo nedotaknjeni kot varnostna kopija.|The administrator moves the existing circle into the new group structure once. Old data stays untouched as a backup.',
 remove:'Odstrani|Remove',reply:'Odgovori|Reply',all:'Vsi|All',noresults:'Ni zadetkov.|No matches.',retry:'Poskusi znova|Try again',
 mentions:'Omeni člana|Mention a member',dates:'Termini (lokalni datum in ura)|Dates (local date and time)',resetpw:'Ponastavi geslo|Reset password',
 resetSent:'Če račun obstaja, preveri e-pošto za ponastavitev.|If the account exists, check your email for a reset link.',
 archiveBusy:'Pripravljam arhiv…|Preparing archive…',confirmRemove:'Odstranim dostop temu članu?|Remove this member’s access?',
-bootstrap:'Ustvari krog|Create circle',bootHint:'Prvi potrjeni vpis ustvari administratorja. Če obstoječi krog še ni nadgrajen, naj se najprej prijavi njegov administrator.|The first completed registration creates the administrator. For an existing circle, its administrator must sign in first.',
+bootstrap:'Ustvari krog|Create circle',bootHint:'Dopolni ime. Nato ustvariš svojo skupino ali se pridružiš z vabilno kodo.|Add your name. Then create your own group or join one with an invite code.',
 sync:'Čakam potrditev strežnika. Ne pošiljaj še enkrat.|Waiting for server confirmation. Do not send again.',
 listEmpty:'Seznam je še prazen.|The list is empty.',storyGone:'Zgodba je potekla.|Story has expired.',cleanup:'Počisti potekle zgodbe|Clean expired stories',
 replyQuote:'Citirano sporočilo|Quoted message',range:'Vnesi veljaven datum ali znesek.|Enter a valid date or amount.',
 codeInvalid:'Koda ni veljavna. Nadaljuj brez kode za ročno odobritev.|Invalid code. Continue without a code for manual approval.',
 migrationRequired:'Obstoječi administrator mora najprej nadgraditi članstvo.|The existing administrator must upgrade membership first.',
-limit:'Dosežena je omejitev tega vnosa.|This item has reached its limit.'
+limit:'Dosežena je omejitev tega vnosa.|This item has reached its limit.',
+groups:'Skupine|Groups',group:'Skupina|Group',newGroup:'Nova skupina|New group',joinBtn:'Pridruži se|Join',groupName:'Ime skupine|Group name',
+createGroup:'Ustvari skupino|Create group',codeLabel:'Vabilna koda|Invite code',renameGroup:'Preimenuj skupino|Rename group',
+joinGroup:'Pridruži se s kodo|Join with a code',
+noGroups:'Nisi še v nobeni skupini. Ustvari novo ali se pridruži z vabilno kodo.|You are not in any group yet. Create one or join with an invite code.',
+leave:'Zapusti skupino|Leave group',confirmLeave:'Zapustim to skupino?|Leave this group?',
+adminLeave:'Administrator ne more zapustiti skupine.|The administrator cannot leave the group.',
+joinFailed:'Pridružitev ni uspela. Koda ni veljavna ali je skupina polna.|Could not join. The code is invalid or the group is full.',
+removedFromGroup:'Nisi več član te skupine.|You are no longer a member of this group.',codeNeeded:'Vnesi vabilno kodo.|Enter an invite code.'
 };
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const store={get(k,d=''){try{return localStorage.getItem(k)??d}catch{return d}},set(k,v){try{localStorage.setItem(k,String(v))}catch{}}};
@@ -164,16 +180,23 @@ let L=store.get('l',navigator.language.startsWith('sl')?'sl':'en'),th=store.get(
 if(!['sl','en'].includes(L))L='sl';
 const t=k=>(S[k]||k).split('|')[L==='sl'?0:1];document.documentElement.dataset.t=th;document.documentElement.lang=L;
 const E=['👍','❤️','😂','😮','🎉'],COLORS=['#2f5bff','#8753b8','#197f73','#aa5a28','#b54468'];
-let db,auth,F,me=null,state=null,cfg={},users={},posts=[],stories=[],expenses=[],lists=[],activities=[],messages=[];
+let db,raw,auth,F,gid=null,opening='',joining=false,me=null,state=null,cfg={},users={},posts=[],stories=[],expenses=[],lists=[],activities=[],messages=[];
 let memories=[],events=[],pinnedPosts=[],memoryDay='';
 const findPost=id=>[...posts,...events,...memories,...pinnedPosts].find(p=>p.id===id);
 let tab='home',room='all',unsubs=[],selfUnsub=null,roomUnsub=null,session=0,started=false,signMode='li',rp=null;
 let postLimit=20,search='',expanded=new Set(),draftImages=[],profileImage='',sheetUnsub=null,focusBack=null,renderPending=false;
 const counts={},ballots={},dailyReplies={},fieldDrafts={},chatDrafts={};let extrasUnsubs=[],authUser=null,ip=null;
 const dayKey=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const ts=()=>Date.now(),activeUsers=()=>Object.values(users).filter(u=>u.status==='active'&&(!state||state.activeIds.includes(u.id)));
-const isAdmin=()=>me?.role==='admin',nameOf=id=>users[id]?.name||'?',key=k=>'krog:'+me.id+':'+k;
+const ts=()=>Date.now(),activeUsers=()=>Object.values(users).filter(u=>!state||state.activeIds.includes(u.id));
+const isAdmin=()=>!!me&&state?.adminUid===me.id,nameOf=id=>users[id]?.name||'?',key=k=>'krog:'+me.id+':'+gid+':'+k;
 const readAt=k=>Number(store.get(key(k),'0'))||0;
+// Group-scoped collections live under groups/{gid}/..., everything else is addressed as written.
+const GS=/^(posts|expenses|lists|activity|stories|rooms|daily)(\/|$)/,gp=p=>GS.test(p)?'groups/'+gid+'/'+p:p;
+function scopedDb(r){return{collection:p=>r.collection(gp(p)),doc:p=>r.doc(gp(p)),batch:()=>r.batch(),runTransaction:f=>r.runTransaction(f)}}
+const ICON={
+ bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+ install:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>'
+};
 function toast(m){$('#toast').textContent=m;$('#toast').style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').style.opacity=0,3800)}
 function fail(e){console.warn(e?.code||e?.message||e);toast(e?.message?.startsWith('KROG:')?t(e.message.slice(5)):e?.code==='permission-denied'?t('denied'):e?.code?.startsWith('auth/')?t('autherror'):t('error'))}
 function checkOnline(){if(!navigator.onLine)throw Error('KROG:offline')}
@@ -200,52 +223,118 @@ function viewport(){document.documentElement.style.setProperty('--vh',(window.vi
 viewport();window.visualViewport?.addEventListener('resize',viewport);addEventListener('resize',viewport);
 function closeSheet(){clearTimeout(sheet.expiry);sheetUnsub?.();sheetUnsub=null;$('.sheet')?.remove();focusBack?.focus?.();focusBack=null}
 function sheet(title,body){closeSheet();focusBack=document.activeElement;const el=document.createElement('div');el.className='sheet';el.innerHTML='<div role="dialog" aria-modal="true" aria-label="'+esc(title)+'">'+btn('close','✕ '+t('close'),'','chip close')+'<h2>'+esc(title)+'</h2>'+body+'</div>';el.addEventListener('click',e=>{if(e.target===el)closeSheet()});document.body.append(el);el.querySelector('button')?.focus()}
-function cleanup(){unsubs.forEach(f=>f());unsubs=[];extrasUnsubs.forEach(f=>f());extrasUnsubs=[];roomUnsub?.();roomUnsub=null;sheetUnsub?.();sheetUnsub=null;started=false;posts=[];memories=[];events=[];pinnedPosts=[];memoryDay='';users={};stories=[];expenses=[];lists=[];activities=[];messages=[];for(const o of [counts,ballots,dailyReplies,fieldDrafts,chatDrafts])Object.keys(o).forEach(k=>delete o[k]);closeSheet()}
+function cleanup(){unsubs.forEach(f=>f());unsubs=[];extrasUnsubs.forEach(f=>f());extrasUnsubs=[];roomUnsub?.();roomUnsub=null;sheetUnsub?.();sheetUnsub=null;started=false;dailyKey='';posts=[];memories=[];events=[];pinnedPosts=[];memoryDay='';users={};stories=[];expenses=[];lists=[];activities=[];messages=[];for(const o of [counts,ballots,dailyReplies,fieldDrafts,chatDrafts])Object.keys(o).forEach(k=>delete o[k]);closeSheet()}
 function authUI(mode=signMode){signMode=mode;const su=mode==='su';$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('sub')+'</p>'+btn('google','Google','','cta soc')+(su?field('an','name','text','','maxlength="50" autocomplete="name"'):'')+field('ae','email','email','','autocomplete="email"')+field('ap','pw','password','','autocomplete="'+(su?'new-password':'current-password')+'" minlength="6"')+(su?field('ac','code'):'')+btn(su?'signup':'login',t(su?'signup':'login'),'','cta')+btn(su?'toli':'tosu',t(su?'login':'signup'))+btn('reset',t('resetpw'))+btn('lang','🌐 '+L.toUpperCase())+'</div>'}
 function finishUI(){ $('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('bootHint')+'</p>'+field('an','name','text',authUser.displayName||'','maxlength="50"')+field('ac','code')+btn('finish',t('go'),'','cta')+btn('logout',t('out'))+'</div>' }
 function randomCode(){const a=new Uint8Array(12);crypto.getRandomValues(a);return Array.from(a,n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('')}
-async function join(name,code){
- checkOnline();name=name.trim();code=code.trim().toUpperCase();if(!name||name.length>50)throw Error('KROG:invalid');
- const uid=auth.currentUser.uid,ur=db.doc('users/'+uid),sr=db.doc('config/state');
- await db.runTransaction(async tx=>{
- const st=await tx.get(sr),ud=await tx.get(ur);if(ud.exists)return;
- const data={name,role:'member',status:'pending',color:COLORS[Math.floor(Math.random()*COLORS.length)],ts:ts()};
- if(!st.exists){
- // Existing installations must be bootstrapped by their administrator before deploying these rules.
- const invite=randomCode();data.role='admin';data.status='active';tx.set(sr,{adminUid:uid,activeIds:[uid]});tx.set(db.doc('config/app'),{code:invite});tx.set(db.doc('invites/'+invite),{enabled:true});tx.set(ur,data);return;
+function memberData(u){return{name:String(u.name||'?').slice(0,50),color:COLORS.includes(u.color)?u.color:COLORS[0],bio:u.bio||'',birthday:u.birthday||'',avatar:u.avatar||'',ts:ts()}}
+async function createProfile(name){
+ checkOnline();name=name.trim();if(!name||name.length>50)throw Error('KROG:invalid');
+ const ref=db.doc('users/'+auth.currentUser.uid);
+ await db.runTransaction(async tx=>{const s=await tx.get(ref);if(s.exists)return;tx.set(ref,{name,color:COLORS[Math.floor(Math.random()*COLORS.length)],gids:[],ts:ts()})});
+}
+async function createGroup(name){
+ checkOnline();name=name.trim();if(!name||name.length>60)throw Error('KROG:invalid');
+ const uid=auth.currentUser.uid,g=raw.collection('groups').doc().id,code=randomCode(),b=db.batch();
+ b.set(db.doc('groups/'+g),{name,adminUid:uid,activeIds:[uid],ts:ts()});
+ b.set(db.doc('groups/'+g+'/private/app'),{code});
+ b.set(db.doc('invites/'+code),{gid:g,name,enabled:true});
+ b.set(db.doc('groups/'+g+'/members/'+uid),memberData(me||{}));
+ b.update(db.doc('users/'+uid),{gids:F.arrayUnion(g)});
+ await b.commit();return g;
+}
+async function joinWithCode(code){
+ checkOnline();code=code.trim().toUpperCase();if(!code)throw Error('KROG:codeNeeded');
+ const uid=auth.currentUser.uid;let inv;
+ try{inv=await db.doc('invites/'+code).get()}catch(e){throw Error('KROG:codeInvalid')}
+ if(!inv.exists||typeof inv.data().gid!=='string')throw Error('KROG:codeInvalid');
+ const g=inv.data().gid;if((me?.gids||[]).includes(g))return g;
+ const u=(await db.doc('users/'+uid).get()).data()||{},b=db.batch();
+ b.set(db.doc('groups/'+g+'/enrollment/'+uid),{code});
+ b.update(db.doc('groups/'+g),{activeIds:F.arrayUnion(uid)});
+ b.set(db.doc('groups/'+g+'/members/'+uid),memberData(u));
+ b.update(db.doc('users/'+uid),{gids:F.arrayUnion(g)});
+ try{await b.commit()}catch(e){if(e.code==='permission-denied')throw Error('KROG:joinFailed');throw e}
+ return g;
+}
+// Runs a join/create action without the profile listener reopening groups half-way, then opens the result.
+async function runJoining(fn){
+ joining=true;let g=null,err=null;
+ try{g=await fn()}catch(e){err=e}
+ joining=false;
+ try{if(g)await setGroup(g);else if(me)await route(session);else if(authUser)finishUI()}catch(e){err=err||e}
+ if(err)throw err;
+}
+async function setGroup(g){
+ store.set('g:'+me.id,g);cleanup();gid=null;state=null;cfg={};tab='home';room='all';rp=null;search='';postLimit=20;expanded.clear();render.room=null;render.tab=null;opening='';
+ await openGroup(g,session);
+}
+async function openGroup(g,token){
+ opening=g;
+ try{
+  const s=await db.doc('groups/'+g).get();if(token!==session)return;
+  if(!s.exists||!s.data().activeIds.includes(me.id)){await dropGroup(g);return}
+  gid=g;state=s.data();started=true;store.set('g:'+me.id,g);shell();subscribe();if(!me.onboarded)welcome();
+ }catch(e){if(e.code==='permission-denied')await dropGroup(g);else fail(e)}
+ finally{if(opening===g)opening=''}
+}
+async function dropGroup(g){
+ toast(t('removedFromGroup'));
+ try{await db.doc('users/'+me.id).update({gids:F.arrayRemove(g)})}catch(e){console.warn(e)}
+}
+function removedFromGroup(g){
+ if(gid!==g)return;cleanup();gid=null;state=null;
+ $('#app').innerHTML='<div class="auth">'+t('loading')+'</div>';dropGroup(g);
+}
+async function route(token){
+ if(!me)return;const gids=Array.isArray(me.gids)?me.gids:null;
+ if(!gids)return legacyFlow(token);
+ if(gid&&started&&gids.includes(gid)){scheduleRender();return}
+ if(gid&&!gids.includes(gid)){cleanup();gid=null;state=null}
+ if(!gids.length){noGroupsUI();return}
+ const saved=store.get('g:'+me.id),pick=gids.includes(saved)?saved:gids[0];
+ if(opening===pick)return;
+ await openGroup(pick,token);
+}
+// Accounts created before groups existed have no gids field.
+async function legacyFlow(token){
+ let ls=null;try{const s=await raw.doc('config/state').get();ls=s.exists?s.data():null}catch{}
+ if(token!==session)return;
+ if(ls&&Array.isArray(ls.activeIds)&&ls.activeIds.includes(me.id)){
+  if(ls.migratedTo){await db.doc('users/'+me.id).update({gids:F.arrayUnion(ls.migratedTo)});return}
+  if(ls.adminUid===me.id){$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('migrateHint')+'</p>'+btn('migrate',t('migrate'),'','cta')+btn('logout',t('out'))+'</div>';return}
+  $('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('migrationRequired')+'</p>'+btn('logout',t('out'))+'</div>';return;
  }
- if(code){const inv=await tx.get(db.doc('invites/'+code));if(!inv.exists)throw Error('KROG:codeInvalid');if(st.data().activeIds.length>=20)throw Error('KROG:full');data.status='active';tx.set(db.doc('enrollment/'+uid),{code});tx.update(sr,{activeIds:[...st.data().activeIds,uid]})}
- tx.set(ur,data);
- });
+ await db.doc('users/'+me.id).update({gids:[]});
+}
+function noGroupsUI(){
+ $('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('noGroups')+'</p>'+field('gn','groupName','text','','maxlength="60"')+btn('createGroup',t('createGroup'),'','cta')+field('gc','codeLabel','text','','autocapitalize="characters" autocomplete="off"')+btn('joinGroup',t('joinBtn'),'','cta soc')+btn('lang','🌐 '+L.toUpperCase())+btn('logout',t('out'))+'</div>';
 }
 async function onAuth(u){
- session++;const token=session;selfUnsub?.();cleanup();me=null;authUser=u;state=null;cfg={};tab='home';room='all';
+ session++;const token=session;selfUnsub?.();cleanup();me=null;authUser=u;state=null;cfg={};gid=null;opening='';tab='home';room='all';
  if(!u)return authUI();
  $('#app').innerHTML='<div class="auth">'+t('loading')+'</div>';
- selfUnsub=db.doc('users/'+u.uid).onSnapshot(async d=>{
- if(token!==session)return;
- if(!d.exists)return finishUI();me={...d.data(),id:u.uid};
- if(me.status!=='active'){cleanup();$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t(me.status==='rejected'?'rejected':'pend')+'</p>'+btn('logout',t('out'))+'</div>';return}
- if(started){scheduleRender();return}
- try{const s=await db.doc('config/state').get();if(token!==session)return;state=s.exists?s.data():null;
- if(!state){if(!isAdmin())throw Error('KROG:migrationRequired');$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('migrateHint')+'</p>'+btn('migrate',t('migrate'),'','cta')+btn('logout',t('out'))+'</div>';return}
- if(!state.activeIds.includes(me.id)){cleanup();$('#app').innerHTML='<div class="auth"><p>'+t('rejected')+'</p>'+btn('logout',t('out'))+'</div>';return}
- started=true;shell();subscribe();if(!me.onboarded)welcome();
- }catch(e){fail(e)}
+ selfUnsub=db.doc('users/'+u.uid).onSnapshot(d=>{
+  if(token!==session)return;
+  if(!d.exists){if(!joining)finishUI();return}
+  me={...d.data(),id:u.uid};
+  if(joining)return;
+  route(token).catch(fail);
  },fail);
 }
 function shell(){
- $('#app').innerHTML='<header><i></i>Krog<span style="flex:1"></span>'+btn('notifications','🔔 <span id="bellCount" class="badge" hidden></span>','aria-label="'+t('bell')+'"')+btn('install','↓','aria-label="'+t('inst')+'"')+'</header><div class="status" id="status" role="status"></div><main id="main"></main><div id="cb"></div><nav>'+[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,e])=>btn('tab','<b>'+e+'</b>'+t(k)+'<i id="badge_'+k+'" hidden></i>','data-k="'+k+'"','')).join('')+'</nav>'+btn('new','＋','aria-label="'+t('post')+'" id="fab"','fab');render();
+ $('#app').innerHTML='<header><i></i>Krog<span style="flex:1"></span>'+btn('groups','<span id="groupName"></span><span aria-hidden="true">▾</span>','aria-label="'+t('groups')+'"','chip groupbtn')+btn('notifications',ICON.bell+'<span id="bellCount" class="badge" hidden></span>','aria-label="'+t('bell')+'"','iconbtn')+btn('install',ICON.install,'aria-label="'+t('inst')+'"','iconbtn')+'</header><div class="status" id="status" role="status"></div><main id="main"></main><div id="cb"></div><nav>'+[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,e])=>btn('tab','<b>'+e+'</b>'+t(k)+'<i id="badge_'+k+'" hidden></i>','data-k="'+k+'"','')).join('')+'</nav>'+btn('new','＋','aria-label="'+t('post')+'" id="fab"','fab');render();
 }
 function stream(query,assign){unsubs.push(query.onSnapshot(s=>{assign(s);scheduleRender()},fail))}
 function docs(s){return s.docs.map(d=>({...d.data(),id:d.id}))}
 let postsUnsub=null;
 function loadPosts(){postsUnsub?.();postsUnsub=db.collection('posts').orderBy('ts','desc').limit(postLimit).onSnapshot(s=>{posts=docs(s);scheduleRender()},fail)}
 function subscribe(){
- stream(db.doc('config/state'),s=>{state=s.data();if(!state?.activeIds.includes(me.id)){cleanup();$('#app').innerHTML='<div class="auth">'+t('rejected')+btn('logout',t('out'))+'</div>'}});
- stream(db.collection('users'),s=>{users=Object.fromEntries(docs(s).map(u=>[u.id,u]))});
- if(isAdmin())stream(db.doc('config/app'),s=>cfg={...cfg,...(s.data()||{})});
- stream(db.doc('config/daily'),s=>cfg.daily=s.data()||{});
+ const g=gid;
+ unsubs.push(db.doc('groups/'+g).onSnapshot(s=>{if(!s.exists||!s.data().activeIds.includes(me.id)){removedFromGroup(g);return}state=s.data();scheduleRender()},e=>{if(e.code==='permission-denied')removedFromGroup(g);else fail(e)}));
+ stream(db.collection('groups/'+g+'/members'),s=>{users=Object.fromEntries(docs(s).map(u=>[u.id,u]))});
+ if(isAdmin())stream(db.doc('groups/'+g+'/private/app'),s=>cfg={...cfg,...(s.data()||{})});
+ stream(db.doc('groups/'+g+'/meta/daily'),s=>cfg.daily=s.data()||{});
  stream(db.collection('posts').where('type','==','event').where('date','>=',dayKey()).orderBy('date').limit(50),s=>events=docs(s));
  stream(db.collection('posts').where('pinned','==',true).limit(10),s=>pinnedPosts=docs(s));
  loadMemories();loadPosts();unsubs.push(()=>postsUnsub?.());
@@ -290,7 +379,7 @@ function dailyHTML(){
  const replies=dailyReplies[dayKey()]||[],own=replies.find(x=>x.id===me.id);
  return '<section class="card"><div class="mu">'+t('daily')+'</div><h3>'+esc(dailyQuestion())+'</h3><div class="row" style="margin-top:10px"><input id="dailyAnswer" maxlength="240" aria-label="'+t('answer')+'" placeholder="'+t('answer')+'" value="'+esc(own?.text||'')+'">'+btn('answer',t('answerBtn'))+'</div>'+replies.map(r=>'<div class="cm"><b>'+esc(nameOf(r.id))+'</b> '+esc(r.text)+'</div>').join('')+'</section>';
 }
-function storyHTML(){const live=stories.filter(s=>s.expiresAt?.toMillis()>ts());return '<div class="strip">'+btn('storyNew','＋ '+t('story'),'','story')+live.map(s=>'<button class="story" data-a="storyView" '+idattr(s.id)+'>'+image(s.img)+'<b>'+esc(nameOf(s.uid))+'</b><span>'+esc(s.text)+'</span></button>').join('')+'</div>'}
+function storyHTML(){const live=stories.filter(s=>s.expiresAt?.toMillis()>ts());return '<div class="strip">'+btn('storyNew','＋ '+t('story'),'','story addstory')+live.map(s=>'<button class="story" data-a="storyView" '+idattr(s.id)+'>'+image(s.img)+'<b>'+esc(nameOf(s.uid))+'</b><span>'+esc(s.text)+'</span></button>').join('')+'</div>'}
 function rituals(){
  const today=new Date(),bd=activeUsers().filter(u=>u.birthday===String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0'));
  const old=memories.filter(p=>{const d=new Date(p.ts);return d.getFullYear()<today.getFullYear()&&d.getMonth()===today.getMonth()&&d.getDate()===today.getDate()});
@@ -325,7 +414,7 @@ function chatHTML(){
 function render(){
  if(!started||!me||!$('#main'))return;
  const m=$('#main'),top=m.scrollTop,nearBottom=m.scrollHeight-m.clientHeight-top<100,oldTab=render.tab;
- $('#status').textContent=navigator.onLine?'':t('offline');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===tab));$('#fab').hidden=!['home','ev','gal'].includes(tab);
+ $('#status').textContent=navigator.onLine?'':t('offline');if($('#groupName'))$('#groupName').textContent=state?.name||'';document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===tab));$('#fab').hidden=!['home','ev','gal'].includes(tab);
  let h='';
  if(tab==='home'){
  const filtered=[...new Map([...pinnedPosts,...posts].map(p=>[p.id,p])).values()].filter(p=>[p.text,p.title,p.q,p.name].join(' ').toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a,b)=>Number(!!b.pinned)-Number(!!a.pinned)||b.ts-a.ts);
@@ -345,9 +434,10 @@ function render(){
  updateBadges();
 }
 function meHTML(){
- const ac=activeUsers(),pending=Object.values(users).filter(u=>u.status==='pending');
+ const ac=activeUsers();
  return '<div class="card"><div class="row">'+avatar(me)+'<h3>'+esc(me.name)+'</h3></div><p>'+esc(me.bio||'')+'</p><div class="act">'+btn('editProfile',t('edit'))+btn('lang','🌐 '+L.toUpperCase())+btn('theme',t('theme'))+btn('logout',t('out'))+'</div></div>'+
- (isAdmin()?'<div class="card"><h3>'+t('inv')+'</h3><p>'+esc(cfg.code||'')+'</p><div class="act">'+btn('copyCode',t('copy'))+btn('newCode',t('nc'))+btn('customDaily',t('daily'))+btn('export',t('export'))+btn('cleanup',t('cleanup'))+'</div></div>'+pending.map(u=>'<div class="card">'+esc(u.name)+'<div class="act">'+btn('approve',t('approve'),idattr(u.id))+btn('reject',t('reject'),idattr(u.id))+'</div></div>').join(''):'')+
+ '<div class="card"><div class="mu">'+t('group')+'</div><h3>'+esc(state.name)+'</h3><div class="act">'+btn('groups',t('groups'))+(isAdmin()?btn('renameGroup',t('renameGroup')):btn('leaveGroup',t('leave')))+'</div></div>'+
+ (isAdmin()?'<div class="card"><h3>'+t('inv')+'</h3><p>'+esc(cfg.code||'')+'</p><div class="act">'+btn('copyCode',t('copy'))+btn('newCode',t('nc'))+btn('customDaily',t('daily'))+btn('export',t('export'))+btn('cleanup',t('cleanup'))+'</div></div>':'')+
  '<div class="card"><h3>'+t('mem')+' · '+ac.length+'/20</h3>'+ac.map(u=>'<div class="row" style="margin-top:10px">'+avatar(u)+profileLink(u)+(isAdmin()&&u.id!==me.id?btn('reject','×',idattr(u.id)+' aria-label="'+t('remove')+'"'):'')+'</div>').join('')+'</div>';
 }
 function welcome(){sheet(t('welcome'),'<p>'+t('welcomeBody')+'</p>'+btn('onboard',t('start'),'','cta'))}
@@ -395,13 +485,39 @@ async function anonVote(id,i){
  checkOnline();const ballot=db.doc('posts/'+id+'/ballots/'+me.id),counter=db.doc('posts/'+id+'/results/'+i);
  await db.runTransaction(async tx=>{const [b,c]=await Promise.all([tx.get(ballot),tx.get(counter)]);if(b.exists)throw Error('KROG:voted');tx.set(ballot,{choice:i});tx.set(counter,{count:(c.exists?c.data().count:0)+1})});toast(t('voted'));
 }
-async function changeStatus(id,status){
- checkOnline();if(id===me.id)return;if(status==='rejected'&&!confirm(t('confirmRemove')))return;
- await db.runTransaction(async tx=>{const sr=db.doc('config/state'),ur=db.doc('users/'+id),[s,u]=await Promise.all([tx.get(sr),tx.get(ur)]);if(!u.exists)return;let ids=s.data().activeIds.filter(x=>x!==id);if(status==='active'){if(ids.length>=20)throw Error('KROG:full');ids.push(id)}tx.update(sr,{activeIds:ids});tx.update(ur,{status})});
+async function removeMember(id){
+ checkOnline();if(id===me.id||!isAdmin())return;if(!confirm(t('confirmRemove')))return;
+ const g=gid;
+ await db.runTransaction(async tx=>{const sr=db.doc('groups/'+g),s=await tx.get(sr);tx.update(sr,{activeIds:s.data().activeIds.filter(x=>x!==id)});tx.delete(db.doc('groups/'+g+'/members/'+id))});
 }
-async function migrate(){
- checkOnline();const s=await db.collection('users').where('status','==','active').get();const ids=s.docs.map(d=>d.id);if(ids.length>20)throw Error('KROG:full');
- await db.runTransaction(async tx=>{const ref=db.doc('config/state'),st=await tx.get(ref);if(st.exists)return;tx.set(ref,{adminUid:me.id,activeIds:ids})});await onAuth(auth.currentUser);
+async function copyLegacy(src,dst,each){
+ let cursor=null,b=db.batch(),n=0,bytes=0;
+ const flush=async()=>{if(n){await b.commit();b=db.batch();n=0;bytes=0}};
+ for(;;){
+  let q=raw.collection(src).orderBy(firebase.firestore.FieldPath.documentId());if(cursor)q=q.startAfter(cursor);
+  const s=await q.limit(50).get();
+  for(const d of s.docs){const data=d.data(),size=JSON.stringify(data).length;if(n&&(n>=400||bytes+size>5e6))await flush();b.set(db.doc(dst+'/'+d.id),data);n++;bytes+=size;if(each)await each(d)}
+  await flush();if(s.size<50)break;cursor=s.docs.at(-1);
+ }
+}
+// One-time move of the pre-groups circle (top-level collections) into groups/{id}. Old data is left untouched.
+async function migrateLegacy(){
+ checkOnline();const ss=await raw.doc('config/state').get();if(!ss.exists||ss.data().adminUid!==me.id)throw Error('KROG:denied');
+ const ls=ss.data(),g='krog-'+me.id.slice(0,10).toLowerCase(),oldCode=(await raw.doc('config/app').get()).data()?.code||randomCode();
+ toast(t('archiveBusy'));
+ const profiles=await Promise.all(ls.activeIds.map(id=>raw.doc('users/'+id).get())),b=db.batch();
+ b.set(db.doc('groups/'+g),{name:'Krog',adminUid:me.id,activeIds:ls.activeIds,ts:ts()});
+ b.set(db.doc('groups/'+g+'/private/app'),{code:oldCode});
+ b.set(db.doc('invites/'+oldCode),{gid:g,name:'Krog',enabled:true});
+ profiles.forEach(p=>{if(p.exists)b.set(db.doc('groups/'+g+'/members/'+p.id),memberData(p.data()))});
+ await b.commit();
+ const base='groups/'+g+'/';
+ await copyLegacy('posts',base+'posts',async d=>{if(d.data().type==='anon')await copyLegacy('posts/'+d.id+'/results',base+'posts/'+d.id+'/results')});
+ await copyLegacy('expenses',base+'expenses');
+ await copyLegacy('lists',base+'lists',d=>copyLegacy('lists/'+d.id+'/items',base+'lists/'+d.id+'/items'));
+ await copyLegacy('rooms/all/msgs',base+'rooms/all/msgs');
+ const b2=db.batch();b2.update(raw.doc('config/state'),{migratedTo:g});b2.update(db.doc('users/'+me.id),{gids:F.arrayUnion(g)});await b2.commit();
+ return g;
 }
 function memberProfile(id){
  const u=users[id];if(!u)return;sheet(t('profile'),'<div class="row">'+avatar(u)+'<h3>'+esc(u.name)+'</h3></div><p>'+esc(u.bio||'')+'</p>'+(u.birthday?'<p>🎂 '+esc(u.birthday)+' '+btn('birthdayICS','📆',idattr(id))+'</p>':'')+'<h3>'+t('memberposts')+'</h3>'+posts.filter(p=>p.uid===id).map(p=>'<div class="card"><p class="line">'+esc(p.text||p.title||p.q||'')+'</p>'+image(images(p)[0])+btn('jump',t('openPost'),idattr(p.id))+'</div>').join(''));
@@ -411,7 +527,10 @@ function editProfile(){
 }
 async function saveProfile(){
  const name=$('#profileName').value.trim(),m=+$('#birthMonth').value,d=+$('#birthDay').value;if(!name||((m||d)&&(!m||!d||new Date(2000,m-1,d).getMonth()!==m-1||d<1||m<1||m>12)))throw Error('KROG:invalid');
- const data={name,bio:$('#profileBio').value.trim(),birthday:m?String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'):'',avatar:profileImage};limitDoc(data,100000);await db.doc('users/'+me.id).update(data);closeSheet();
+ const data={name,bio:$('#profileBio').value.trim(),birthday:m?String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'):'',avatar:profileImage};limitDoc(data,100000);
+ const b=db.batch();b.update(db.doc('users/'+me.id),data);b.update(db.doc('groups/'+gid+'/members/'+me.id),data);await b.commit();
+ for(const g of (me.gids||[]))if(g!==gid)db.doc('groups/'+g+'/members/'+me.id).update(data).catch(()=>{});
+ closeSheet();
 }
 function storyComposer(){draftImages=[];sheet(t('story'),'<p>'+t('storyHint')+'</p>'+textarea('storyText','txt','',240)+'<label class="chip">📷<input id="storyPhoto" type="file" accept="image/*" hidden></label><div id="storyPreview"></div>'+btn('publishStory',t('send'),'','cta'))}
 async function publishStory(){checkOnline();const text=$('#storyText').value.trim();if(!text&&!draftImages.length)return;const d={uid:me.id,text,img:draftImages[0]||'',createdAt:F.serverTimestamp(),expiresAt:firebase.firestore.Timestamp.fromMillis(ts()+86400000)};limitDoc(d);await db.collection('stories').add(d);closeSheet();listenStories()}
@@ -445,12 +564,13 @@ async function sendMessage(img=''){
  checkOnline();const input=$('#chatText'),text=input?.value.trim()||'',sentRoom=room,sentReply=rp;if(!text&&!img)return;const d={uid:me.id,name:me.name,text,ts:ts()};if(img)d.img=img;if(rp)d.rp=rp.text?.slice(0,500)||'📷';limitDoc(d);await db.collection('rooms/'+sentRoom+'/msgs').add(d);if(chatDrafts[sentRoom]?.trim()===text)delete chatDrafts[sentRoom];if(room===sentRoom&&input?.isConnected&&input.value.trim()===text)input.value='';if(rp===sentReply)rp=null;render();
 }
 async function newCode(){
- const code=randomCode(),batch=db.batch();if(cfg.code)batch.delete(db.doc('invites/'+cfg.code));batch.set(db.doc('config/app'),{code});batch.set(db.doc('invites/'+code),{enabled:true});await batch.commit();
+ const code=randomCode(),batch=db.batch();if(cfg.code)batch.delete(db.doc('invites/'+cfg.code));
+ batch.set(db.doc('groups/'+gid+'/private/app'),{code});batch.set(db.doc('invites/'+code),{gid,name:state.name,enabled:true});await batch.commit();
 }
 async function exportArchive(){
  toast(t('archiveBusy'));const data={version:2,exportedAt:new Date().toISOString()};
  async function all(q){let result=[],cursor=null;for(;;){const s=await(cursor?q.orderBy(firebase.firestore.FieldPath.documentId()).startAfter(cursor).limit(100):q.orderBy(firebase.firestore.FieldPath.documentId()).limit(100)).get();result.push(...docs(s));if(s.size<100)break;cursor=s.docs.at(-1)}return result}
- for(const c of ['users','posts','expenses','lists'])data[c]=await all(db.collection(c));
+ data.users=await all(db.collection('groups/'+gid+'/members'));data.group={id:gid,name:state.name};for(const c of ['posts','expenses','lists'])data[c]=await all(db.collection(c));
  data.groupMessages=await all(db.collection('rooms/all/msgs'));data.listItems={};for(const l of data.lists)data.listItems[l.id]=await all(db.collection('lists/'+l.id+'/items'));
  data.anonymousResults={};for(const p of data.posts.filter(x=>x.type==='anon'))data.anonymousResults[p.id]=await all(db.collection('posts/'+p.id+'/results'));
  // Invitation secrets never belong in a shareable archive.
@@ -460,12 +580,12 @@ const pendingActions=new Set();
 const A={
 close:closeSheet,toli:()=>authUI('li'),tosu:()=>authUI('su'),
 login:()=>auth.signInWithEmailAndPassword($('#ae').value.trim(),$('#ap').value),
-signup:async()=>{const name=$('#an').value,code=$('#ac').value,email=$('#ae').value.trim(),pw=$('#ap').value;if(!name.trim())throw Error('KROG:invalid');await auth.createUserWithEmailAndPassword(email,pw);await join(name,code)},
-finish:()=>join($('#an').value,$('#ac').value),
+signup:()=>{const name=$('#an').value,code=$('#ac').value,email=$('#ae').value.trim(),pw=$('#ap').value;if(!name.trim())throw Error('KROG:invalid');return runJoining(async()=>{await auth.createUserWithEmailAndPassword(email,pw);await createProfile(name);return code.trim()?joinWithCode(code):null})},
+finish:()=>{const name=$('#an').value,code=$('#ac').value;return runJoining(async()=>{await createProfile(name);return code.trim()?joinWithCode(code):null})},
 google:async()=>{const p=new firebase.auth.GoogleAuthProvider();try{await auth.signInWithPopup(p)}catch(e){if(['auth/popup-blocked','auth/operation-not-supported-in-this-environment'].includes(e.code))await auth.signInWithRedirect(p);else throw e}},
 reset:async()=>{const email=$('#ae').value.trim();if(!email)throw Error('KROG:invalid');await auth.sendPasswordResetEmail(email);toast(t('resetSent'))},
-logout:()=>auth.signOut(),migrate,
-lang:()=>{L=L==='sl'?'en':'sl';store.set('l',L);document.documentElement.lang=L;closeSheet();if(started)shell();else if(authUser)finishUI();else authUI()},
+logout:()=>auth.signOut(),migrate:()=>runJoining(migrateLegacy),
+lang:()=>{L=L==='sl'?'en':'sl';store.set('l',L);document.documentElement.lang=L;closeSheet();if(started)shell();else if(authUser&&me)route(session);else if(authUser)finishUI();else authUI()},
 theme:()=>{th=th==='dark'?'light':'dark';store.set('th',th);document.documentElement.dataset.t=th;render()},
 tab:el=>{tab=el.dataset.k;render()},new:()=>composer(),publish:(el,id)=>publish(id),
 more:()=>{postLimit+=40;loadPosts()},search:()=>{search=$('#search').value;render()},
@@ -483,7 +603,7 @@ profile:(el,id)=>memberProfile(id),editProfile,saveProfile,
 removeAvatar:()=>{profileImage='';$('#avatarPreview').innerHTML=''},
 answer:async()=>{const text=$('#dailyAnswer').value.trim();if(!text)return;await db.doc('daily/'+dayKey()+'/answers/'+me.id).set({text,ts:ts()});toast(t('saved'))},
 customDaily:()=>sheet(t('customDaily'),field('questionSL','questionSL','text',cfg.daily?.sl||'','maxlength="240" lang="sl"')+field('questionEN','questionEN','text',cfg.daily?.en||'','maxlength="240" lang="en"')+btn('saveDaily',t('save'),'','cta')),
-saveDaily:async()=>{const sl=$('#questionSL').value.trim(),en=$('#questionEN').value.trim();if(!sl||!en)throw Error('KROG:invalid');await db.doc('config/daily').set({day:dayKey(),sl,en});closeSheet()},
+saveDaily:async()=>{const sl=$('#questionSL').value.trim(),en=$('#questionEN').value.trim();if(!sl||!en)throw Error('KROG:invalid');await db.doc('groups/'+gid+'/meta/daily').set({day:dayKey(),sl,en});closeSheet()},
 storyNew:storyComposer,publishStory,storyView:(el,id)=>storyView(id),
 deleteStory:async(el,id)=>{if(confirm(t('del'))){await db.doc('stories/'+id).delete();closeSheet()}},
 cleanup:async()=>{const s=await db.collection('stories').where('expiresAt','<=',firebase.firestore.Timestamp.now()).limit(100).get();const b=db.batch();s.docs.forEach(d=>b.delete(d.ref));await b.commit();toast(t('saved'))},
@@ -502,9 +622,22 @@ jump:async(el,id)=>{closeSheet();if(!posts.some(p=>p.id===id)){const s=await db.
 room:async el=>{const r=el.dataset.room;if(r!=='all'){const ref=db.doc('rooms/'+r);const s=await ref.get();if(!s.exists)await ref.set({members:[me.id,el.dataset.id].sort()})}room=r;rp=null;listenRoom();render()},
 sendMessage:()=>sendMessage(),reply:(el,id)=>{rp=messages.find(m=>m.id===id);render();$('#chatText')?.focus()},
 msgReact:(el,id)=>db.doc('rooms/'+room+'/msgs/'+id).update({['re.'+me.id]:el.dataset.e}),
-approve:(el,id)=>changeStatus(id,'active'),reject:(el,id)=>changeStatus(id,'rejected'),newCode,
+reject:(el,id)=>removeMember(id),newCode,
 copyCode:async()=>{await navigator.clipboard.writeText(cfg.code);toast(t('cp'))},
 onboard:async()=>{await db.doc('users/'+me.id).update({onboarded:true});closeSheet()},export:()=>{sheet(t('export'),'<p>'+t('exportHint')+'</p>'+btn('confirmExport',t('export'),'','cta'))},confirmExport:exportArchive,
+groups:async()=>{
+ const items=await Promise.all((me.gids||[]).map(async g=>{try{const s=await db.doc('groups/'+g).get();return s.exists&&s.data().activeIds.includes(me.id)?{id:g,name:s.data().name,n:s.data().activeIds.length}:null}catch{return null}}));
+ sheet(t('groups'),items.filter(Boolean).map(g=>'<div class="card">'+btn('switchGroup',esc(g.name)+(g.id===gid?' ✓':'')+' <span class="mu">'+g.n+'/20</span>',idattr(g.id),g.id===gid?'chip on':'chip')+'</div>').join('')+'<h3>'+t('newGroup')+'</h3>'+field('gn','groupName','text','','maxlength="60"')+btn('createGroup',t('createGroup'),'','cta')+'<h3>'+t('joinGroup')+'</h3>'+field('gc','codeLabel','text','','autocapitalize="characters" autocomplete="off"')+btn('joinGroup',t('joinBtn'),'','cta soc'));
+},
+switchGroup:(el,id)=>{closeSheet();if(id!==gid)return setGroup(id)},
+createGroup:()=>{const v=$('#gn').value;return runJoining(()=>createGroup(v))},
+joinGroup:()=>{const v=$('#gc').value;return runJoining(()=>joinWithCode(v))},
+renameGroup:()=>sheet(t('renameGroup'),field('gn','groupName','text',state.name,'maxlength="60"')+btn('saveGroupName',t('save'),'','cta')),
+saveGroupName:async()=>{const n=$('#gn').value.trim();if(!n||n.length>60)throw Error('KROG:invalid');const b=db.batch();b.update(db.doc('groups/'+gid),{name:n});if(cfg.code)b.update(db.doc('invites/'+cfg.code),{name:n});await b.commit();closeSheet()},
+leaveGroup:async()=>{
+ if(isAdmin()){toast(t('adminLeave'));return}if(!confirm(t('confirmLeave')))return;checkOnline();
+ const g=gid,b=db.batch();b.update(db.doc('groups/'+g),{activeIds:F.arrayRemove(me.id)});b.delete(db.doc('groups/'+g+'/members/'+me.id));b.update(db.doc('users/'+me.id),{gids:F.arrayRemove(g)});await b.commit();
+},
 install:async()=>{if(ip){await ip.prompt();ip=null}else sheet(t('inst'),'<p>'+t('ih')+'</p>')}
 };
 document.addEventListener('click',async e=>{
@@ -516,7 +649,7 @@ document.addEventListener('keydown',e=>{
  if(e.key==='Escape')closeSheet();
  if(e.key==='Tab'&&$('.sheet')){const nodes=[...$('.sheet').querySelectorAll('button,input,textarea,select,[tabindex]')].filter(n=>!n.disabled&&n.offsetParent!==null),a=nodes[0],z=nodes.at(-1);if(e.shiftKey&&document.activeElement===a){e.preventDefault();z?.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a?.focus()}}
  if(e.key!=='Enter'||e.shiftKey||e.isComposing)return;
- const id=e.target.id;if(id==='search'){e.preventDefault();A.search()}else if(id==='chatText'){e.preventDefault();$('#cb [data-a="sendMessage"]').click()}else if(['ae','ap','ac'].includes(id)){e.preventDefault();document.querySelector('[data-a=login],[data-a=signup],[data-a=finish]')?.click()}else if(id?.startsWith('comment_')){e.preventDefault();e.target.parentElement.querySelector('button').click()}
+ const id=e.target.id;if(id==='search'){e.preventDefault();A.search()}else if(id==='chatText'){e.preventDefault();$('#cb [data-a="sendMessage"]').click()}else if(id==='gn'){e.preventDefault();document.querySelector('[data-a=createGroup]')?.click()}else if(id==='gc'){e.preventDefault();document.querySelector('[data-a=joinGroup]')?.click()}else if(['ae','ap','ac'].includes(id)){e.preventDefault();document.querySelector('[data-a=login],[data-a=signup],[data-a=finish]')?.click()}else if(id?.startsWith('comment_')){e.preventDefault();e.target.parentElement.querySelector('button').click()}
 });
 document.addEventListener('input',e=>{if(e.target.id==='chatText')chatDrafts[room]=e.target.value;else if(e.target.id&&$('#main')?.contains(e.target))fieldDrafts[e.target.id]=e.target.value});
 document.addEventListener('focusout',()=>{if(render.dirty)setTimeout(()=>scheduleRender(),50)});
@@ -538,5 +671,5 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&started){
 setInterval(()=>{if(started&&!document.hidden){stories=stories.filter(s=>s.expiresAt?.toMillis()>ts());listenDaily();if(ts()-storyFloor>300000)listenStories();scheduleRender()}},30000);
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e});
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-try{firebase.initializeApp(FB);auth=firebase.auth();db=firebase.firestore();F=firebase.firestore.FieldValue;auth.onAuthStateChanged(onAuth);auth.getRedirectResult().catch(fail)}catch(e){$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('error')+'</p>'+btn('reload',t('retry'))+'</div>';A.reload=()=>location.reload()}
+try{firebase.initializeApp(FB);auth=firebase.auth();raw=firebase.firestore();db=scopedDb(raw);F=firebase.firestore.FieldValue;auth.onAuthStateChanged(onAuth);auth.getRedirectResult().catch(fail)}catch(e){$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('error')+'</p>'+btn('reload',t('retry'))+'</div>';A.reload=()=>location.reload()}
 </script></body></html>
