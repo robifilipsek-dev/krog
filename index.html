@@ -220,7 +220,7 @@ memories:'Na današnji dan|On this day',week:'Zadnjih 7 dni|Last 7 days',best:'N
 loadedHint:'Povzetek in iskanje zajemata naložene objave; za več naloži starejše.|Summary and search cover loaded posts; load older posts for more.',
 bell:'Obvestila|Notifications',notificationHint:'Obvestila iz zadnjih 100 dejavnosti; za klepet velja značka odprtega pogovora.|Notifications from the latest 100 activities; chat badge covers the selected conversation.',
 newpost:'Nova objava|New post',newcomment:'Komentar na tvojo objavo|Comment on your post',newreaction:'Reakcija na tvojo objavo|Reaction on your post',
-mention:'Omenjen/-a si|You were mentioned',newevent:'Nov dogodek|New event',unread:'Neprebrano|Unread',readall:'Označi kot prebrano|Mark as read',
+mention:'Omenjen/-a si|You were mentioned',newevent:'Nov dogodek|New event',unread:'Neprebrano|Unread',readall:'Počisti vse|Clear all',
 welcome:'Dobrodošel v Krogu|Welcome to Krog',welcomeBody:'Za začetek povej nekaj o sebi, odgovori na vprašanje dneva ali deli droben trenutek. En stavek je dovolj. Objave vidijo samo aktivni člani.|Start with your profile, answer today’s question or share a small moment. One sentence is enough. Only active members see posts.',
 start:'Gremo|Let’s go',export:'Izvozi arhiv|Export archive',exportHint:'Arhiv vsebuje profile, objave, sezname, stroške in skupinski klepet. Brez zasebnih pogovorov in zasebnih glasov.|Archive includes profiles, posts, lists, expenses and group chat. No private conversations or private ballots.',
 migrate:'Prenesi obstoječi krog|Move existing circle',migrateHint:'Administrator enkrat prenese obstoječi krog v novo zgradbo skupin. Stari podatki ostanejo nedotaknjeni kot varnostna kopija.|The administrator moves the existing circle into the new group structure once. Old data stays untouched as a backup.',
@@ -297,7 +297,7 @@ function viewport(){document.documentElement.style.setProperty('--vh',(window.vi
 viewport();window.visualViewport?.addEventListener('resize',viewport);addEventListener('resize',viewport);
 function closeSheet(){clearTimeout(sheet.expiry);sheetUnsub?.();sheetUnsub=null;$('.sheet')?.remove();focusBack?.focus?.();focusBack=null}
 function sheet(title,body){closeSheet();focusBack=document.activeElement;const el=document.createElement('div');el.className='sheet';el.innerHTML='<div role="dialog" aria-modal="true" aria-label="'+esc(title)+'">'+btn('close','✕ '+t('close'),'','chip close')+'<h2>'+esc(title)+'</h2>'+body+'</div>';el.addEventListener('click',e=>{if(e.target===el)closeSheet()});document.body.append(el);el.querySelector('button')?.focus()}
-function cleanup(){tourOn=false;document.getElementById('tour')?.remove();unsubs.forEach(f=>f());unsubs=[];extrasUnsubs.forEach(f=>f());extrasUnsubs=[];roomUnsub?.();roomUnsub=null;sheetUnsub?.();sheetUnsub=null;started=false;dailyKey='';postsReady=false;posts=[];memories=[];events=[];pinnedPosts=[];memoryDay='';users={};stories=[];expenses=[];lists=[];activities=[];messages=[];for(const o of [counts,ballots,dailyReplies,fieldDrafts,chatDrafts])Object.keys(o).forEach(k=>delete o[k]);closeSheet()}
+function cleanup(){tourOn=false;document.getElementById('tour')?.remove();unsubs.forEach(f=>f());unsubs=[];extrasUnsubs.forEach(f=>f());extrasUnsubs=[];roomUnsub?.();roomUnsub=null;sheetUnsub?.();sheetUnsub=null;started=false;dailyKey='';postsReady=false;actReady=false;posts=[];memories=[];events=[];pinnedPosts=[];memoryDay='';users={};stories=[];expenses=[];lists=[];activities=[];messages=[];for(const o of [counts,ballots,dailyReplies,fieldDrafts,chatDrafts])Object.keys(o).forEach(k=>delete o[k]);closeSheet()}
 function authFailure(e){
  const code=e?.code||'auth/unknown';const map={
  'auth/popup-blocked':ux('Brskalnik je blokiral prijavno okno. Omogoči pojavna okna za to stran ali se prijavi z e-pošto.','The browser blocked the sign-in window. Allow popups for this site or use email.'),
@@ -415,21 +415,21 @@ function shell(){
 }
 function stream(query,assign){unsubs.push(query.onSnapshot(s=>{assign(s);scheduleRender()},quiet))}
 function docs(s){return s.docs.map(d=>({...d.data(),id:d.id}))}
-let postsUnsub=null,postsReady=false,onlySaved=false;
+let postsUnsub=null,postsReady=false,onlySaved=false,feedType='all',actReady=false;
 function loadPosts(){postsUnsub?.();postsUnsub=db.collection('posts').orderBy('ts','desc').limit(postLimit).onSnapshot(s=>{posts=docs(s);postsReady=true;scheduleRender()},e=>{quiet(e);postsReady=true;scheduleRender()})}
 function subscribe(){
  const g=gid;
  unsubs.push(db.doc('groups/'+g).onSnapshot(s=>{if(!s.exists||!s.data().activeIds.includes(me.id)){removedFromGroup(g);return}state=s.data();scheduleRender()},e=>{if(e.code==='permission-denied')removedFromGroup(g);else quiet(e)}));
  stream(db.collection('groups/'+g+'/members'),s=>{users=Object.fromEntries(docs(s).map(u=>[u.id,u]))});
  if(isAdmin())stream(db.doc('groups/'+g+'/private/app'),s=>cfg={...cfg,...(s.data()||{})});
- stream(db.doc('groups/'+g+'/meta/daily'),s=>cfg.daily=s.data()||{});
+ 
  stream(db.collection('posts').where('date','>=',dayKey()).orderBy('date').limit(50),s=>events=docs(s).filter(p=>p.type==='event'));
  stream(db.collection('posts').where('pinned','==',true).limit(10),s=>pinnedPosts=docs(s));
  loadMemories();loadPosts();unsubs.push(()=>postsUnsub?.());
  stream(db.collection('expenses').orderBy('ts','desc'),s=>expenses=docs(s));
  stream(db.collection('lists').orderBy('ts','desc'),s=>lists=docs(s));
- stream(db.collection('activity').orderBy('ts','desc').limit(100),s=>activities=docs(s));
- listenStories();listenRoom();listenDaily();
+ stream(db.collection('activity').orderBy('ts','desc').limit(100),s=>{if(actReady)s.docChanges().forEach(c=>{if(c.type!=='added')return;const a=c.doc.data();if(a.actor===me.id||(a.targetUid!==me.id&&!(a.mentions||[]).includes(me.id)))return;toast(nameOf(a.actor)+' '+({reaction:ux('se je odzval/-a','reacted'),comment:ux('je komentiral/-a','commented')}[a.kind]||ux('te je omenil/-a','mentioned you'))+(a.text?' · '+a.text.slice(0,60):''))});actReady=true;activities=docs(s)});
+ listenStories();listenRoom();
 }
 let storyUnsub=null,storyFloor=0;
 async function listenStories(){
@@ -456,7 +456,9 @@ function updateBadges(){
  if(!me||!$('#bellCount'))return;const n=notifications().filter(a=>a.ts>readAt('notifications')).length;$('#bellCount').textContent=n;$('#bellCount').hidden=!n;
  for(const [k,n] of Object.entries({home:posts.filter(p=>p.uid!==me.id&&p.ts>readAt('home')).length,chat:messages.filter(p=>p.uid!==me.id&&p.ts>readAt('room:'+room)).length})){const b=$('#badge_'+k);b.textContent=n;b.hidden=!n||tab===k}
 }
-function notifications(){return activities.filter(a=>a.actor!==me.id&&(a.kind==='post'||a.kind==='event'||a.targetUid===me.id||(a.mentions||[]).includes(me.id)))}
+const dismissedIds=()=>{try{return JSON.parse(store.get(key('dismissed'),'[]'))}catch{return[]}};
+function dismissNotif(ids){const a=[...new Set([...dismissedIds(),...[].concat(ids)])].slice(-300);store.set(key('dismissed'),JSON.stringify(a))}
+function notifications(){const gone=dismissedIds();return activities.filter(a=>!gone.includes(a.id)&&a.actor!==me.id&&(a.kind==='post'||a.kind==='event'||a.targetUid===me.id||(a.mentions||[]).includes(me.id)))}
 function mentions(text){return activeUsers().filter(u=>text.toLocaleLowerCase().includes('@'+u.name.toLocaleLowerCase())).map(u=>u.id)}
 function activity(batch,kind,ref,data,targetUid=null){
  const a={actor:me.id,kind,ref,ts:ts(),text:String(data.text||data.title||data.q||'').slice(0,160),mentions:kind==='reaction'?[]:mentions(data.text||'')};if(targetUid)a.targetUid=targetUid;
@@ -504,7 +506,8 @@ const savedIds=()=>{try{return JSON.parse(store.get(key('saved'),'[]'))}catch{re
 function composeCard(){return '<button class="card what" data-a="new"><span class="av-wrap">'+avatar(me)+'</span><span>'+ux('Kaj je novega, ','What’s new, ')+esc(me.name.split(' ')[0])+'?</span><b aria-hidden="true">📷</b></button>'}
 function greeting(){const h=new Date().getHours();return '<div class="page-heading"><h2>'+ux(h<5?'Lahko noč':h<12?'Dobro jutro':h<18?'Dober dan':'Dober večer',h<5?'Good night':h<12?'Good morning':h<18?'Good afternoon':'Good evening')+', '+esc(me.name.split(' ')[0])+'</h2><p>'+esc(state.name)+' · '+activeUsers().length+' '+ux('članov','members')+'</p></div>'}
 function eventPreview(){return '<section class="card"><h3>📅 '+ux('Prihajajoči dogodki','Upcoming events')+'</h3>'+ (upcoming().slice(0,3).map(p=>'<div class="event-preview"><b>'+esc(p.title)+'</b><span>'+esc(new Date(p.date).toLocaleString(L))+'</span></div>').join('')||'<p class="mu">'+ux('Trenutno ni prihajajočih dogodkov.','No upcoming events yet.')+'</p>')+btn('tab',ux('Poglej vse dogodke →','View all events →'),'data-k="ev"')+'</section>'}
-const SK='<div class="card sk" aria-hidden="true"></div>'.repeat(3);function moreBtn(){return postsReady&&posts.length>=postLimit?btn('more',t('more'),'','cta soc'):''}function pageHeading(title,description){return '<div class="page-heading"><h2>'+esc(title)+'</h2><p>'+esc(description)+'</p></div>'}
+const SK='<div class="card sk" aria-hidden="true"></div>'.repeat(3);function moreBtn(){return postsReady&&posts.length>=postLimit?btn('more',t('more'),'','cta soc'):''}function feedChips(){return '<div class="strip" aria-label="'+ux('Filter objav','Filter posts')+'">'+[['all',ux('Vse','All')],['post',ux('Objave','Posts')],['photo',ux('Fotografije','Photos')],['poll',ux('Ankete','Polls')],['event',ux('Dogodki','Events')]].map(([k,l])=>btn('feedType',l,'data-id="'+k+'"',feedType===k?'chip on':'chip')).join('')+'</div>'}
+function pageHeading(title,description){return '<div class="page-heading"><h2>'+esc(title)+'</h2><p>'+esc(description)+'</p></div>'}
 function emptyState(icon,title,description){return '<div class="empty-state"><span>'+icon+'</span><b>'+esc(title)+'</b><p>'+esc(description)+'</p></div>'}
 function setting(action,title,description){return btn(action,'<span><b>'+esc(title)+'</b><small>'+esc(description)+'</small></span><span aria-hidden="true">›</span>','','settings-row')}
 function chatHTML(){
@@ -516,8 +519,8 @@ function render(){
  $('#status').textContent=navigator.onLine?'':t('offline');if($('#groupName'))$('#groupName').textContent=state?.name||'';updateInstall();document.querySelectorAll('nav button').forEach(b=>(b.classList.toggle('on',b.dataset.k===tab),b.setAttribute('aria-current',b.dataset.k===tab?'page':'false')));$('#fab').hidden=!['home','ev','gal'].includes(tab);$('#fab').innerHTML='<span aria-hidden="true">＋</span><b>'+(tab==='gal'?ux('Fotografije','Photos'):tab==='ev'?ux('Dogodek','Event'):ux('Objavi','Post'))+'</b>';$('#fab').setAttribute('aria-label',tab==='gal'?ux('Dodaj fotografije','Add photos'):tab==='ev'?ux('Dodaj dogodek','Add event'):ux('Nova objava','New post'));
  let h='';
  if(tab==='home'){
- const filtered=[...new Map([...pinnedPosts,...posts].map(p=>[p.id,p])).values()].filter(p=>!onlySaved||savedIds().includes(p.id)).filter(p=>[p.text,p.title,p.q,p.name].join(' ').toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a,b)=>Number(!!b.pinned)-Number(!!a.pinned)||b.ts-a.ts);
- h=greeting()+starterHTML()+storyHTML()+composeCard()+toolsHTML()+dailyHTML()+rituals()+eventPreview()+'<div class="row"><input id="search" value="'+esc(search)+'" placeholder="'+t('search')+'" aria-label="'+t('search')+'">'+btn('search','⌕')+'</div><p class="mu">'+posts.length+' '+t('loaded')+'</p>'+(postsReady?filtered.map(card).join('')+(!filtered.length?emptyState('✨',search||onlySaved?t('noresults'):ux('Še ni objav','No posts yet'),search||onlySaved?ux('Poskusi z drugo besedo ali shrani objavo z 🔖.','Try another word or save a post with 🔖.'):ux('Bodi prvi: pritisni gumb Objavi in deli trenutek.','Be the first: press Post and share a moment.')):''):SK)+moreBtn();
+ const filtered=[...new Map([...pinnedPosts,...posts].map(p=>[p.id,p])).values()].filter(p=>feedType==='all'||(feedType==='photo'?images(p).length>0:feedType==='poll'?['poll','anon'].includes(p.type):feedType==='event'?['event','when'].includes(p.type):p.type==='post')).filter(p=>!onlySaved||savedIds().includes(p.id)).filter(p=>[p.text,p.title,p.q,p.name].join(' ').toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a,b)=>Number(!!b.pinned)-Number(!!a.pinned)||b.ts-a.ts);
+ h=greeting()+starterHTML()+storyHTML()+composeCard()+toolsHTML()+rituals()+eventPreview()+feedChips()+'<div class="row"><input id="search" value="'+esc(search)+'" placeholder="'+t('search')+'" aria-label="'+t('search')+'">'+btn('search','⌕')+'</div><p class="mu">'+posts.length+' '+t('loaded')+'</p>'+(postsReady?filtered.map(card).join('')+(!filtered.length?emptyState('✨',search||onlySaved||feedType!=='all'?t('noresults'):ux('Še ni objav','No posts yet'),search||onlySaved||feedType!=='all'?ux('Poskusi z drugo besedo ali shrani objavo z 🔖.','Try another word or save a post with 🔖.'):ux('Bodi prvi: pritisni gumb Objavi in deli trenutek.','Be the first: press Post and share a moment.')):''):SK)+moreBtn();
  }
  if(tab==='ev')h=pageHeading(t('ev'),ux('Načrtujte srečanja in uredite skupne obveznosti.','Plan your time together and manage shared tasks.'))+toolsHTML()+'<h2 class="section-title">'+ux('Prihajajoči dogodki','Upcoming events')+'</h2>'+(upcoming().map(card).join('')||'<div class="card">'+ux('Ni prihajajočih dogodkov. Dodaj prvega z gumbom +.','No upcoming events. Add one with the + button.')+'</div>')+'<h2 class="section-title">'+t('past')+'</h2>'+ (posts.filter(p=>p.type==='event'&&new Date(p.date)<new Date()).sort((a,b)=>new Date(b.date)-new Date(a.date)).map(card).join('')||'<p class="mu">'+ux('Med naloženimi objavami ni preteklih dogodkov.','No past events in loaded posts.')+'</p>')+moreBtn()+'<h2 class="section-title">'+ux('Dogovarjanje za termin','Find a date')+'</h2>'+posts.filter(p=>p.type==='when').map(card).join('');
  if(tab==='gal')h=pageHeading(t('gal'),ux('Skupni trenutki, zbrani na enem mestu.','Shared moments, together in one place.'))+(!posts.some(p=>images(p).length)?emptyState('🖼️',ux('Prostor za vaše spomine','A place for your memories'),ux('Dodaj fotografijo z gumbom +.','Add a photo using the + button.')):'')+'<div class="gal">'+posts.flatMap(p=>images(p).map((v,i)=>'<button data-a="zoom" '+idattr(p.id)+' data-i="'+i+'" aria-label="'+ux('Odpri fotografijo','Open photo')+' '+(i+1)+' · '+esc(nameOf(p.uid))+'">'+image(v)+'</button>')).join('')+'</div>'+moreBtn();
@@ -536,7 +539,7 @@ function meHTML(){
  const ac=activeUsers();
  return pageHeading(ux('Profil in nastavitve','Profile and settings'),ux('Tvoj profil, skupina in osebne nastavitve.','Your profile, group and preferences.'))+'<div class="card profile-hero">'+avatar(me)+'<h3>'+esc(me.name)+'</h3><p class="mu">'+esc(me.bio||ux('Dodaj nekaj besed o sebi.','Tell the group a little about yourself.'))+'</p><div class="stats"><span><b>'+posts.filter(p=>p.uid===me.id).length+'</b>'+ux('objav','posts')+'</span><span><b>'+ac.length+'</b>'+ux('članov','members')+'</span><span><b>'+savedIds().length+'</b>'+ux('shranjeno','saved')+'</span></div><div class="act">'+btn('editProfile','📷 '+ux('Uredi profil in fotografijo','Edit profile and photo'))+'</div></div><section class="card"><h3>'+ux('Osebne nastavitve','Preferences')+'</h3>'+setting('lang',t('lang'),L==='sl'?'Slovenščina':'English')+setting('theme',t('theme'),th==='dark'?ux('Temna · klikni za svetlo','Dark · switch to light'):ux('Svetla · klikni za temno','Light · switch to dark'))+setting('tourStart',ux('Vodič po aplikaciji','App tour'),ux('Interaktivni ogled vseh zavihkov','Interactive walkthrough of every tab'))+setting('help',ux('Pomoč in navodila','Help and instructions'),ux('Odgovori na pogosta vprašanja','Answers to common questions'))+setting('rules',ux('Pravila skupnosti in zasebnost','Community rules and privacy'),ux('Kako varujemo vaš krog','How we protect your circle'))+setting('logout',t('out'),ux('Odjavi se iz svojega računa','Sign out of your account'))+'</section>'+
  '<div class="card"><div class="mu">'+t('group')+'</div><h3>'+esc(state.name)+'</h3><div class="act">'+btn('groups',t('groups'))+(isAdmin()?btn('renameGroup',t('renameGroup')):btn('leaveGroup',t('leave')))+'</div></div>'+
- (isAdmin()?'<div class="card"><h3>'+t('inv')+'</h3><p>'+esc(cfg.code||'')+'</p><div class="act">'+btn('copyCode',t('copy'))+btn('newCode',t('nc'))+btn('customDaily',t('daily'))+btn('export',t('export'))+btn('cleanup',t('cleanup'))+'</div></div>':'')+
+ (isAdmin()?'<div class="card"><h3>'+t('inv')+'</h3><p>'+esc(cfg.code||'')+'</p><div class="act">'+btn('copyCode',t('copy'))+btn('newCode',t('nc'))+btn('export',t('export'))+btn('cleanup',t('cleanup'))+'</div></div>':'')+
  '<div class="card"><h3>'+t('mem')+' · '+ac.length+'/20</h3>'+ac.map(u=>'<div class="row" style="margin-top:10px">'+avatar(u)+profileLink(u)+(isAdmin()&&u.id!==me.id?btn('reject','×',idattr(u.id)+' aria-label="'+t('remove')+'"'):'')+'</div>').join('')+'</div>';
 }
 let guideStep=0;
@@ -700,8 +703,7 @@ function welcome(){
 }
 function starterHTML(){
  if(store.get(key('starter'))==='1')return'';
- const own=(dailyReplies[dayKey()]||[]).some(x=>x.id===me.id),
- it=[[!!me.avatar,ux('Dodaj profilno fotografijo','Add a profile photo'),'editProfile'],[posts.some(p=>p.uid===me.id),ux('Objavi prvi trenutek','Share your first moment'),'new'],[own,ux('Odgovori na vprašanje dneva','Answer the daily question'),'']];
+ const it=[[!!me.avatar,ux('Dodaj profilno fotografijo','Add a profile photo'),'editProfile'],[posts.some(p=>p.uid===me.id),ux('Objavi prvi trenutek','Share your first moment'),'new']];
  if(isAdmin())it.push([activeUsers().length>1,ux('Povabi prijatelje z vabilno kodo','Invite friends with the code'),'copyCode']);
  const n=it.filter(x=>x[0]).length;if(n===it.length)return'';
  return '<section class="card"><div class="row"><h3 style="flex:1">'+ux('Začni v Krogu','Get started')+' · '+n+'/'+it.length+'</h3>'+btn('starterHide','✕','aria-label="'+t('close')+'"','chip tiny')+'</div><div class="prog"><u style="width:'+Math.round(n/it.length*100)+'%"></u></div>'+it.map(([ok,l,a])=>'<div class="todo '+(ok?'ok':'')+'"><i>'+(ok?'✓':'')+'</i><span>'+l+'</span>'+(!ok&&a?btn(a,a==='copyCode'?t('copy'):ux('Odpri','Open')):'')+'</div>').join('')+btn('tourStart','🧭 '+ux('Vodič po aplikaciji','App tour'),'','cta soc')+'</section>';
@@ -721,7 +723,7 @@ signup:()=>{const name=$('#an').value,code=$('#ac').value,email=$('#ae').value.t
 finish:()=>{const name=$('#an').value,code=$('#ac').value;return runJoining(async()=>{await createProfile(name);return code.trim()?joinWithCode(code):null})},
 google:googleLogin,
 reset:async()=>{const email=$('#ae').value.trim();if(!email)throw Error('KROG:invalid');await auth.sendPasswordResetEmail(email);toast(t('resetSent'))},
-logout:()=>auth.signOut(),whoReacted:(el,id)=>{const k=el.dataset.k,x=k==='m'?messages.find(m=>m.id===id):findPost(id);if(!x)return;
+logout:()=>auth.signOut(),feedType:(el,id)=>{feedType=id;render()},whoReacted:(el,id)=>{const k=el.dataset.k,x=k==='m'?messages.find(m=>m.id===id):findPost(id);if(!x)return;
  const list=reactList(x,k==='p').sort((a,b)=>E.indexOf(a[1])-E.indexOf(b[1])),cnt={};list.forEach(([,e])=>cnt[e]=(cnt[e]||0)+1);
  sheet(ux('Odzivi','Reactions')+' · '+list.length,'<div class="row rchips">'+E.filter(e=>cnt[e]).map(e=>'<span class="chip on">'+e+' '+cnt[e]+'</span>').join('')+'</div>'+list.map(([u,e])=>'<div class="row rrow">'+avatar(users[u]||{name:'?'})+'<b style="flex:1">'+esc(u===me.id?ux('Ti','You'):nameOf(u))+'</b><span class="rbig">'+e+'</span></div>').join(''))},
 tourStart:()=>{closeSheet();tourOn=true;tourI=0;tourShow()},tourNext:()=>{tourI++;tourShow()},tourBack:()=>{tourI=Math.max(0,tourI-1);tourShow()},tourEnd,
@@ -774,8 +776,8 @@ addItem:async(el,id)=>{const input=$('#listItem'),text=input.value.trim();if(!te
 checkItem:async(el,id)=>{const value=el.checked;try{checkOnline();await db.doc('lists/'+el.dataset.list+'/items/'+id).update({done:value})}catch(e){if(el.isConnected)el.checked=!value;throw e}},
 deleteItem:(el,id)=>db.doc('lists/'+el.dataset.list+'/items/'+id).delete(),
 ics:(el,id)=>calendar(id),birthdayICS:(el,id)=>calendar(id,true),
-notifications:()=>{sheet(t('bell'),'<p class="mu">'+t('notificationHint')+'</p>'+(notifications().length?btn('readall',t('readall')):emptyState('🔔',ux('Ni obvestil','No notifications'),ux('Tu se bodo prikazale nove objave, komentarji in omembe.','New posts, comments and mentions will appear here.')))+notifications().map(n=>'<div class="card '+(n.ts>readAt('notifications')?'newdot':'')+'">'+btn('jump',esc(nameOf(n.actor))+' · '+t((n.mentions||[]).includes(me.id)?'mention':({post:'newpost',event:'newevent',comment:'newcomment',reaction:'newreaction'}[n.kind]))+'<p>'+esc(n.text)+'</p><small>'+ago(n.ts)+'</small>',idattr(n.ref))+'</div>').join(''))},
-readall:()=>{store.set(key('notifications'),Math.max(ts(),...activities.map(a=>a.ts)));closeSheet();updateBadges()},
+notifications:()=>{sheet(t('bell'),'<p class="mu">'+t('notificationHint')+'</p>'+(notifications().length?btn('readall',t('readall')):emptyState('🔔',ux('Ni obvestil','No notifications'),ux('Tu se bodo prikazale nove objave, komentarji in omembe.','New posts, comments and mentions will appear here.')))+notifications().map(n=>'<div class="card '+(n.ts>readAt('notifications')?'newdot':'')+'">'+btn('openNotif',esc(nameOf(n.actor))+' · '+t((n.mentions||[]).includes(me.id)?'mention':({post:'newpost',event:'newevent',comment:'newcomment',reaction:'newreaction'}[n.kind]))+'<p>'+esc(n.text)+'</p><small>'+ago(n.ts)+'</small>',idattr(n.id)+' data-ref="'+esc(n.ref)+'"')+'</div>').join(''))},
+readall:()=>{store.set(key('notifications'),Math.max(ts(),...activities.map(a=>a.ts)));dismissNotif(notifications().map(a=>a.id));closeSheet();updateBadges()},openNotif:(el,id)=>{dismissNotif(id);updateBadges();return A.jump(el,el.dataset.ref)},
 jump:async(el,id)=>{closeSheet();if(!posts.some(p=>p.id===id)){const s=await db.doc('posts/'+id).get();if(!s.exists)return toast(t('noresults'));posts.push({...s.data(),id})}tab='home';search='';render();document.getElementById('post_'+id)?.scrollIntoView({block:'center'})},
 room:async el=>{const r=el.dataset.room;if(r!=='all'){const ref=db.doc('rooms/'+r);const s=await ref.get();if(!s.exists)await ref.set({members:[me.id,el.dataset.id].sort()})}room=r;rp=null;listenRoom();render()},
 cancelReply:()=>{rp=null;render()},sendMessage:()=>sendMessage(),reply:(el,id)=>{rp=messages.find(m=>m.id===id);render();$('#chatText')?.focus()},
@@ -825,10 +827,10 @@ document.addEventListener('change',async e=>{
  }catch(err){fail(err)}finally{el.disabled=false;const action={avatarPhoto:'saveProfile',postPhotos:'publish',storyPhoto:'publishStory'}[el.id];if(el.id==='postPhotos'&&el.isConnected)el.disabled=draftImages.length>=3;if(action&&el.isConnected){const save=$('.sheet [data-a="'+action+'"]');if(save){save.disabled=action==='publish'&&!!$('#galleryComposer')&&!draftImages.length;save.removeAttribute('aria-busy')}}}
 });
 addEventListener('resize',()=>{if(tourOn)tourPlace()});addEventListener('online',()=>{scheduleRender();if(started)listenStories()});addEventListener('offline',scheduleRender);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&started){listenStories();listenDaily();scheduleRender()}});
-setInterval(()=>{if(started&&!document.hidden){stories=stories.filter(s=>s.expiresAt?.toMillis()>ts());listenDaily();if(ts()-storyFloor>300000)listenStories();scheduleRender()}},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&started){listenStories();loadMemories();scheduleRender()}});
+setInterval(()=>{if(started&&!document.hidden){stories=stories.filter(s=>s.expiresAt?.toMillis()>ts());loadMemories();if(ts()-storyFloor>300000)listenStories();scheduleRender()}},30000);
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;updateInstall()});addEventListener('appinstalled',()=>{ip=null;updateInstall()});
 addEventListener('error',e=>{console.error(e.error||e.message)});addEventListener('unhandledrejection',e=>{console.error(e.reason)});
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').then(r=>r.update()).catch(()=>{});
 try{firebase.initializeApp(FB);auth=firebase.auth();raw=firebase.firestore();db=scopedDb(raw);F=firebase.firestore.FieldValue;auth.onAuthStateChanged(onAuth);auth.getRedirectResult().catch(fail)}catch(e){console.error(e);$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('error')+'</p><p class="mu">'+esc((e?.name||'Error')+': '+(e?.message||e))+'</p>'+btn('reload',t('retry'))+'</div>';A.reload=()=>location.reload()}
 </script></body></html>
