@@ -48,7 +48,8 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px var(--ac)}
 #cb{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 14px}
 .gal{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.gal img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer}
 #toast{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:#17232be6;color:#fff;padding:9px 18px;border-radius:20px;opacity:0;transition:.25s;pointer-events:none;z-index:20;max-width:90%;text-align:center}
-.auth{padding:56px 24px;display:flex;flex-direction:column;gap:12px;max-width:420px;margin:auto}
+.auth{padding:48px 24px;display:flex;flex-direction:column;gap:12px;width:100%;max-width:440px;margin:0 auto}
+.cta.soc{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
 .auth h1{font-size:42px;letter-spacing:-1px}
 </style></head><body>
 <div id="app"></div><div id="toast"></div>
@@ -70,7 +71,7 @@ pend:'Čakaš na odobritev administratorja. Stran se osveži sama.|Waiting for a
 out:'Odjava|Log out',lang:'Jezik|Language',theme:'Tema|Theme',mem:'Člani|Members',inv:'Vabilna koda|Invite code',
 ok:'Odobri|Approve',rej:'Zavrni|Reject',full:'Krog je poln (20 članov).|The circle is full (20 members).',
 del:'Izbrisati?|Delete?',cm:'Komentiraj…|Comment…',ask:'Prošnje za vstop|Join requests',nc:'Nova koda|New code',
-soon:'Prihaja|Upcoming',when:'Termin|Date poll',pw:'Dodaj naslov in vsaj 2 termina|Add a title and at least 2 dates',past:'Minilo|Past',hint:'Namesti: v brskalniku izberi »Dodaj na začetni zaslon«.|Install: choose “Add to Home Screen” in your browser.',cp:'Kopirano|Copied',now:'zdaj|now',pq:'Dodaj vprašanje in vsaj 2 možnosti|Add a question and at least 2 options',pe:'Dodaj naslov in datum|Add a title and date'};
+soon:'Prihaja|Upcoming',cw:'Nadaljuj z|Continue with',or:'ali z e-pošto|or with email',go:'Nadaljuj|Continue',when:'Termin|Date poll',pw:'Dodaj naslov in vsaj 2 termina|Add a title and at least 2 dates',past:'Minilo|Past',hint:'Namesti: v brskalniku izberi »Dodaj na začetni zaslon«.|Install: choose “Add to Home Screen” in your browser.',cp:'Kopirano|Copied',now:'zdaj|now',pq:'Dodaj vprašanje in vsaj 2 možnosti|Add a question and at least 2 options',pe:'Dodaj naslov in datum|Add a title and date'};
 let L=localStorage.l||(navigator.language.startsWith('sl')?'sl':'en'),th=localStorage.th||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
 const t=k=>(S[k]||k).split('|')[L=='sl'?0:1],$=q=>document.querySelector(q),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 document.documentElement.dataset.t=th;
@@ -84,16 +85,17 @@ const shrink=f=>new Promise(r=>{const i=new Image;i.onload=()=>{const k=Math.min
 (()=>{const c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');x.fillStyle='#2f5bff';x.fillRect(0,0,512,512);x.strokeStyle='#fff';x.lineWidth=52;x.beginPath();x.arc(256,256,118,0,7);x.stroke();x.fillStyle='#ffd84d';x.beginPath();x.arc(352,160,34,0,7);x.fill();const u=c.toDataURL();$('#fav').href=u;$('#ati').href=u;
 $('#mf').href=URL.createObjectURL(new Blob([JSON.stringify({name:'Krog',short_name:'Krog',display:'standalone',start_url:location.href.split('#')[0],background_color:'#2f5bff',theme_color:'#2f5bff',icons:[{src:u,sizes:'512x512',type:'image/png'}]})],{type:'application/json'}))})();
 
-function authUI(m){am=m||'li';const su=am=='su';$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><div class="mu" style="margin-bottom:8px">${t('sub')}</div>${su?`<input id=n placeholder="${t('name')}">`:''}<input id=e type=email placeholder="${t('email')}"><input id=p type=password placeholder="${t('pw')}">${su?`<input id=c placeholder="${t('code')}">`:''}<button class=cta data-a="${su?'su':'li'}">${t(su?'signup':'login')}</button><button class=chip data-a="${su?'toli':'tosu'}">${t(su?'login':'signup')}</button><button class=chip data-a=lang>🌐 ${L.toUpperCase()}</button></div>`}
-async function signup(){const n=$('#n').value.trim(),e=$('#e').value,p=$('#p').value,c=$('#c').value.trim().toUpperCase();if(!n)return toast(t('name'));
-const cr=await auth.createUserWithEmailAndPassword(e,p);let role='member',status='pending';const cd=await db.doc('config/app').get();
-const uid=cr.user.uid,d={name:n,role,status,color:'hsl('+Math.floor(Math.random()*360)+' 55% 48%)',ts:Date.now()};
+function authUI(m){am=m||'li';const su=am=='su';$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><div class="mu" style="margin-bottom:8px">${t('sub')}</div><button class="cta soc" data-a=gg><b style="color:#ea4335">G</b> ${t('cw')} Google</button><div class=mu style="text-align:center">${t('or')}</div>${su?`<input id=n placeholder="${t('name')}">`:''}<input id=e type=email placeholder="${t('email')}"><input id=p type=password placeholder="${t('pw')}">${su?`<input id=c placeholder="${t('code')}">`:''}<button class=cta data-a="${su?'su':'li'}">${t(su?'signup':'login')}</button><button class=chip data-a="${su?'toli':'tosu'}">${t(su?'login':'signup')}</button><button class=chip data-a=lang>🌐 ${L.toUpperCase()}</button></div>`}
+async function join(uid,n,c){const cd=await db.doc('config/app').get(),d={name:n,role:'member',status:'pending',color:'hsl('+Math.floor(Math.random()*360)+' 55% 48%)',ts:Date.now()};
 if(!cd.exists){d.role='admin';d.status='active';await db.doc('users/'+uid).set(d);await db.doc('config/app').set({code:rnd()});return}
-if(c&&c==cd.data().code){const k=(await db.collection('users').where('status','==','active').get()).size;if(k<20){d.status='active';d.code=c}else toast(t('full'))}
+c=(c||'').trim().toUpperCase();if(c&&c==cd.data().code){const k=(await db.collection('users').where('status','==','active').get()).size;if(k<20){d.status='active';d.code=c}else toast(t('full'))}
 await db.doc('users/'+uid).set(d)}
+async function signup(){const n=$('#n').value.trim();if(!n)return toast(t('name'));const cr=await auth.createUserWithEmailAndPassword($('#e').value,$('#p').value);await join(cr.user.uid,n,$('#c').value)}
+const soc=async pv=>{try{await auth.signInWithPopup(pv)}catch(x){if(x.code=='auth/popup-blocked'||x.code=='auth/operation-not-supported-in-this-environment')await auth.signInWithRedirect(pv);else throw x}};
+function finishUI(u){$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><div class=mu>${t('sub')}</div><input id=n value="${esc(u.displayName||'')}" placeholder="${t('name')}"><input id=c placeholder="${t('code')}"><button class=cta data-a=fin>${t('go')}</button><button class=chip data-a=out>${t('out')}</button></div>`}
 
 if(!ok||!FB.apiKey)setup();else auth.onAuthStateChanged(u=>{unsubs.forEach(f=>f());unsubs=[];cu&&cu();cu=null;$('#app').innerHTML='';if(!u){me=null;return authUI(am)}
-unsubs.push(db.doc('users/'+u.uid).onSnapshot(d=>{if(!d.exists)return;me={...d.data(),id:u.uid};
+unsubs.push(db.doc('users/'+u.uid).onSnapshot(d=>{if(!d.exists){if(u.providerData[0]&&u.providerData[0].providerId!='password')finishUI(u);return}me={...d.data(),id:u.uid};
 if(me.status!='active'){$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><p>${t('pend')}</p><button class=chip data-a=out>${t('out')}</button></div>`;return}
 if(!$('#main')){shell();sub()}render()}))});
 function shell(){$('#app').innerHTML=`<header><i></i>Krog</header><main id=main></main><div id=cb></div><nav>${[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,i])=>`<button data-a=tab data-k=${k}><b>${i}</b>${t(k)}<i id=bd_${k} hidden></i></button>`).join('')}</nav><button class=fab data-a=new id=fab>＋</button>`}
@@ -150,6 +152,7 @@ ${ty=='when'?`<input id=evt placeholder="${t('evt')}">${[1,2,3,4].map(()=>'<inpu
 $('#tx').value=cm.text||'';if(cm.img){$('#pv').src=cm.img;$('#pv').style.display='block'}}
 
 const P=id=>db.doc('posts/'+id),A={
+gg:()=>soc(new firebase.auth.GoogleAuthProvider()),fin:()=>{const n=$('#n').value.trim();if(!n)return toast(t('name'));return join(auth.currentUser.uid,n,$('#c').value)},
 li:()=>auth.signInWithEmailAndPassword($('#e').value,$('#p').value),su:signup,tosu:()=>authUI('su'),toli:()=>authUI('li'),out:()=>auth.signOut(),
 lang:()=>{L=L=='sl'?'en':'sl';localStorage.l=L;if($('#main')){shell();render()}else authUI(am)},
 theme:()=>{th=th=='dark'?'light':'dark';localStorage.th=th;document.documentElement.dataset.t=th;render()},
