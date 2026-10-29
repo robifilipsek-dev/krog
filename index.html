@@ -5,7 +5,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Krog">
 <title>Krog</title>
-<link rel="icon" id="fav"><link rel="apple-touch-icon" id="ati"><link rel="manifest" id="mf">
+<link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><link rel="manifest" href="manifest.json">
 <style>
 :root{--bg:#eef0ea;--card:#fff;--tx:#17232b;--mu:#6b7780;--ac:#2f5bff;--y:#ffd84d;--bd:#dfe3da;--in:#e8ebe3}
 [data-t=dark]{--bg:#0e1116;--card:#171b22;--tx:#eaedf2;--mu:#8a94a1;--ac:#6f8bff;--bd:#252b35;--in:#222833}
@@ -51,6 +51,21 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px var(--ac)}
 .auth{padding:48px 24px;display:flex;flex-direction:column;gap:12px;width:100%;max-width:440px;margin:0 auto}
 .cta.soc{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
 .auth h1{font-size:42px;letter-spacing:-1px}
+.card{border:1px solid var(--bd)}
+.card.what{display:flex;align-items:center;gap:12px;cursor:pointer}
+.what span{flex:1;background:var(--in);border-radius:22px;padding:11px 16px;color:var(--mu)}
+.what b{font-size:20px;font-weight:400}
+.empty{text-align:center;margin-top:70px;color:var(--mu)}.empty b{display:block;font-size:46px;font-weight:400;margin-bottom:6px}
+nav button b{width:fit-content;margin:0 auto 2px;padding:3px 18px;border-radius:14px;transition:background .2s}
+nav button.on b{background:color-mix(in srgb,var(--ac) 16%,transparent)}
+button,.bar{transition:transform .1s,background .2s}
+button:active,.bar:active{transform:scale(.96)}
+.sheet{animation:fd .2s}.sheet>div{animation:up .25s ease-out}
+@keyframes fd{from{opacity:0}}@keyframes up{from{transform:translateY(40px);opacity:0}}
+.msg p{border:1px solid var(--bd)}.me p{border-color:transparent}
+.msg:not(.me) p{border-bottom-left-radius:6px}.msg.me p{border-bottom-right-radius:6px}
+#ci{border-radius:22px}
+header{padding-top:16px;font-size:26px}
 </style></head><body>
 <div id="app"></div><div id="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -71,7 +86,7 @@ pend:'Čakaš na odobritev administratorja. Stran se osveži sama.|Waiting for a
 out:'Odjava|Log out',lang:'Jezik|Language',theme:'Tema|Theme',mem:'Člani|Members',inv:'Vabilna koda|Invite code',
 ok:'Odobri|Approve',rej:'Zavrni|Reject',full:'Krog je poln (20 članov).|The circle is full (20 members).',
 del:'Izbrisati?|Delete?',cm:'Komentiraj…|Comment…',ask:'Prošnje za vstop|Join requests',nc:'Nova koda|New code',
-soon:'Prihaja|Upcoming',cw:'Nadaljuj z|Continue with',or:'ali z e-pošto|or with email',go:'Nadaljuj|Continue',when:'Termin|Date poll',pw:'Dodaj naslov in vsaj 2 termina|Add a title and at least 2 dates',past:'Minilo|Past',hint:'Namesti: v brskalniku izberi »Dodaj na začetni zaslon«.|Install: choose “Add to Home Screen” in your browser.',cp:'Kopirano|Copied',now:'zdaj|now',pq:'Dodaj vprašanje in vsaj 2 možnosti|Add a question and at least 2 options',pe:'Dodaj naslov in datum|Add a title and date'};
+soon:'Prihaja|Upcoming',inst:'Namesti|Install',ih:'iPhone (Safari): tapni gumb Deli, nato »Dodaj na začetni zaslon«.|iPhone (Safari): tap Share, then “Add to Home Screen”.',ah:'Android (Chrome): meni ⋮ in »Namesti aplikacijo«.|Android (Chrome): menu ⋮ then “Install app”.',cw:'Nadaljuj z|Continue with',or:'ali z e-pošto|or with email',go:'Nadaljuj|Continue',when:'Termin|Date poll',pw:'Dodaj naslov in vsaj 2 termina|Add a title and at least 2 dates',past:'Minilo|Past',hint:'Namesti: v brskalniku izberi »Dodaj na začetni zaslon«.|Install: choose “Add to Home Screen” in your browser.',cp:'Kopirano|Copied',now:'zdaj|now',pq:'Dodaj vprašanje in vsaj 2 možnosti|Add a question and at least 2 options',pe:'Dodaj naslov in datum|Add a title and date'};
 let L=localStorage.l||(navigator.language.startsWith('sl')?'sl':'en'),th=localStorage.th||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
 const t=k=>(S[k]||k).split('|')[L=='sl'?0:1],$=q=>document.querySelector(q),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 document.documentElement.dataset.t=th;
@@ -81,9 +96,11 @@ const toast=m=>{const e=$('#toast');e.textContent=m;e.style.opacity=1;setTimeout
 const av=u=>`<div class="av" style="background:${u.color||'#2f5bff'}">${esc((u.name||'?')[0].toUpperCase())}</div>`;
 const ago=ts=>{const s=(Date.now()-ts)/1e3;return s<60?t('now'):s<3600?Math.floor(s/60)+' min':s<86400?Math.floor(s/3600)+' h':new Date(ts).toLocaleDateString(L,{day:'numeric',month:'short'})};
 const shrink=f=>new Promise(r=>{const i=new Image;i.onload=()=>{const k=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);r(c.toDataURL('image/jpeg',.6))};i.src=URL.createObjectURL(f)});
-// ikona + manifest (PWA)
-(()=>{const c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');x.fillStyle='#2f5bff';x.fillRect(0,0,512,512);x.strokeStyle='#fff';x.lineWidth=52;x.beginPath();x.arc(256,256,118,0,7);x.stroke();x.fillStyle='#ffd84d';x.beginPath();x.arc(352,160,34,0,7);x.fill();const u=c.toDataURL();$('#fav').href=u;$('#ati').href=u;
-$('#mf').href=URL.createObjectURL(new Blob([JSON.stringify({name:'Krog',short_name:'Krog',display:'standalone',start_url:location.href.split('#')[0],background_color:'#2f5bff',theme_color:'#2f5bff',icons:[{src:u,sizes:'512x512',type:'image/png'}]})],{type:'application/json'}))})();
+// PWA
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+let ip=null;const sa=()=>matchMedia('(display-mode:standalone)').matches||navigator.standalone;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;render()});
+addEventListener('appinstalled',()=>{ip=null;render()});
 
 function authUI(m){am=m||'li';const su=am=='su';$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><div class="mu" style="margin-bottom:8px">${t('sub')}</div><button class="cta soc" data-a=gg><b style="color:#ea4335">G</b> ${t('cw')} Google</button><div class=mu style="text-align:center">${t('or')}</div>${su?`<input id=n placeholder="${t('name')}">`:''}<input id=e type=email placeholder="${t('email')}"><input id=p type=password placeholder="${t('pw')}">${su?`<input id=c placeholder="${t('code')}">`:''}<button class=cta data-a="${su?'su':'li'}">${t(su?'signup':'login')}</button><button class=chip data-a="${su?'toli':'tosu'}">${t(su?'login':'signup')}</button><button class=chip data-a=lang>🌐 ${L.toUpperCase()}</button></div>`}
 async function join(uid,n,c){const cd=await db.doc('config/app').get(),d={name:n,role:'member',status:'pending',color:'hsl('+Math.floor(Math.random()*360)+' 55% 48%)',ts:Date.now()};
@@ -98,7 +115,7 @@ if(!ok||!FB.apiKey)setup();else auth.onAuthStateChanged(u=>{unsubs.forEach(f=>f(
 unsubs.push(db.doc('users/'+u.uid).onSnapshot(d=>{if(!d.exists){if(u.providerData[0]&&u.providerData[0].providerId!='password')finishUI(u);return}me={...d.data(),id:u.uid};
 if(me.status!='active'){$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><p>${t('pend')}</p><button class=chip data-a=out>${t('out')}</button></div>`;return}
 if(!$('#main')){shell();sub()}render()}))});
-function shell(){$('#app').innerHTML=`<header><i></i>Krog</header><main id=main></main><div id=cb></div><nav>${[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,i])=>`<button data-a=tab data-k=${k}><b>${i}</b>${t(k)}<i id=bd_${k} hidden></i></button>`).join('')}</nav><button class=fab data-a=new id=fab>＋</button>`}
+function shell(){$('#app').innerHTML=`<header><i></i>Krog<span style="flex:1"></span><button class=chip id=inst data-a=inst hidden>⬇️ ${t('inst')}</button></header><main id=main></main><div id=cb></div><nav>${[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,i])=>`<button data-a=tab data-k=${k}><b>${i}</b>${t(k)}<i id=bd_${k} hidden></i></button>`).join('')}</nav><button class=fab data-a=new id=fab>＋</button>`}
 function setup(){$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><div class=card><b>⚙️ Firebase</b><p style="margin-top:8px">${L=='sl'?'Aplikacija še nima Firebase nastavitev. Odpri datoteko v urejevalniku in v FB (na vrhu skripte) vpiši svoj config. Če je že vpisan, preveri internetno povezavo (SDK se nalaga iz gstatic.com).':'The app has no Firebase config yet. Open the file in an editor and fill in FB (top of the script). If it is filled in, check your connection (the SDK loads from gstatic.com).'}</p></div></div>`}
 addEventListener('error',e=>toast(e.message));
 function sub(){unsubs.push(
@@ -126,14 +143,14 @@ return `<div class=card><div class=row>${av(me)}<div><b>${esc(me.name)}</b><div 
 +(ad&&pe.length?`<div class=card><b>${t('ask')}</b>${pe.map(u=>`<div class=row style="margin-top:10px">${av(u)}<span style="flex:1">${esc(u.name)}</span><button class=chip data-a=ap data-id=${u.id}>${t('ok')}</button><button class=chip data-a=rj data-id=${u.id}>${t('rej')}</button></div>`).join('')}</div>`:'')
 +`<div class=card><b>${t('mem')} (${ac.length}/20)</b>${ac.map(u=>`<div class=row style="margin-top:10px">${av(u)}<span>${esc(u.name)}</span></div>`).join('')}</div><p class=mu style="padding:4px 6px">${t('hint')}</p>`}
 
-function render(){if(!me||me.status!='active'||!$('#main'))return;const m=$('#main'),emp=`<p class=mu style="text-align:center;margin-top:60px">${t('empty')}</p>`;
+function render(){if(!me||me.status!='active'||!$('#main'))return;const m=$('#main'),emp=`<div class=empty><b>🫶</b>${t('empty')}</div>`;
 document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k==tab));
-$('#fab').style.display=['home','ev','gal'].includes(tab)?'':'none';
+$('#inst').hidden=sa();$('#fab').style.display=['home','ev','gal'].includes(tab)?'':'none';
 const cb=$('#cb');if(tab=='chat'){if(!$('#ci'))cb.innerHTML=`<div id=rpv class=mu data-a=rpx style="width:100%"></div><label class=chip style="cursor:pointer">📷<input type=file accept="image/*" id=fc hidden></label><input id=ci placeholder="${t('msg')}" autocomplete=off style="flex:1;width:auto"><button class=cta data-a=sc style="width:auto;padding:0 20px">➤</button>`}else cb.innerHTML='';
 const un={home:posts.filter(p=>p.ts>LS('home')&&p.uid!=me.id).length,chat:chat.filter(c=>c.ts>LS('chat')&&c.uid!=me.id).length};
 for(const k in un){const n=k==tab?0:un[k],b=$('#bd_'+k);if(b){b.hidden=!n;b.textContent=n}if(k==tab)localStorage['s_'+k]=Date.now()}
 let h='';
-if(tab=='home')h=posts.map(card).join('')||emp;
+if(tab=='home')h=`<div class="card what" data-a=new>${av(me)}<span>${t('txt')}</span><b>📷</b></div>`+(posts.map(card).join('')||emp);
 if(tab=='ev'){const ev=posts.filter(p=>p.type=='event').sort((a,b)=>new Date(a.date)-new Date(b.date)),lim=Date.now()-108e5,up=ev.filter(e=>new Date(e.date)>=lim),ps=ev.filter(e=>new Date(e.date)<lim).reverse();
 h=up.map(card).join('')+(ps.length?`<div class=mu style="margin:18px 4px 0">${t('past')}</div>`+ps.map(card).join(''):'');if(!h)h=`<p class=mu style="text-align:center;margin-top:60px">${t('noev')}</p>`}
 if(tab=='gal'){const g=posts.filter(p=>p.img);h=g.length?`<div class=gal>${g.map(p=>`<img src="${p.img}" data-a=zoom data-id=${p.id}>`).join('')}</div>`:emp}
@@ -152,6 +169,7 @@ ${ty=='when'?`<input id=evt placeholder="${t('evt')}">${[1,2,3,4].map(()=>'<inpu
 $('#tx').value=cm.text||'';if(cm.img){$('#pv').src=cm.img;$('#pv').style.display='block'}}
 
 const P=id=>db.doc('posts/'+id),A={
+inst:()=>{if(ip){ip.prompt();ip=null;render()}else sheet(`<b>${t('inst')}</b><p>${t('ih')}</p><p>${t('ah')}</p><button class=chip data-a=x>✕</button>`)},
 gg:()=>soc(new firebase.auth.GoogleAuthProvider()),fin:()=>{const n=$('#n').value.trim();if(!n)return toast(t('name'));return join(auth.currentUser.uid,n,$('#c').value)},
 li:()=>auth.signInWithEmailAndPassword($('#e').value,$('#p').value),su:signup,tosu:()=>authUI('su'),toli:()=>authUI('li'),out:()=>auth.signOut(),
 lang:()=>{L=L=='sl'?'en':'sl';localStorage.l=L;if($('#main')){shell();render()}else authUI(am)},
