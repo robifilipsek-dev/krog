@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="sl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#2f5bff">
+<meta name="theme-color" content="#f2f2f7"><meta name="color-scheme" content="light dark"><meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Krog">
 <title>Krog</title>
@@ -171,6 +171,60 @@ button.what{width:100%;text-align:left;margin:10px 0;min-height:64px}.what span{
 .rsum{background:none!important;border:0!important;padding:6px 2px!important;min-height:32px;color:var(--mu);font-size:13px;display:flex;align-items:center;gap:6px;margin-top:8px;text-align:left}
 .rem{letter-spacing:-3px;font-size:16px}.msg .rsum{margin-top:2px}.msg.me .rsum{align-self:flex-end}
 .rchips{flex-wrap:wrap}.rrow{padding:10px 0;border-bottom:1px solid var(--bd)}.rbig{font-size:26px}
+.cta.dz{background:#c43846;color:#fff;box-shadow:none}/* ===== iOS look ===== */
+:root{--bg:#f2f2f7;--card:#fff;--tx:#000;--mu:#6c6c70;--ac:#007aff;--bd:#d1d1d6;--in:#7676801f;--y:#ffd60a;--ring:#007aff40;--r:14px;--bad:#ff3b30;--ok:#34c759}
+[data-t=dark]{--bg:#000;--card:#1c1c1e;--tx:#fff;--mu:#98989f;--ac:#0a84ff;--bd:#38383a;--in:#7676803d;--ring:#0a84ff55}
+body{font:16px/1.38 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;letter-spacing:-.016em;-webkit-text-size-adjust:100%}
+button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.mu{font-size:13px}
+header{background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:saturate(1.8) blur(20px);-webkit-backdrop-filter:saturate(1.8) blur(20px);border-bottom:.5px solid var(--bd);padding:8px 16px;font-size:21px;font-weight:700}
+main{background:var(--bg)}
+.card{border:0;border-radius:var(--r);box-shadow:none!important;padding:16px}
+.page-heading h2{font-size:34px;font-weight:700;letter-spacing:-.04em}
+.cta{min-height:50px;border-radius:14px;background:var(--ac);color:#fff;box-shadow:none;font-weight:600;font-size:17px}
+.cta.soc{background:var(--in);color:var(--ac);border:0}
+.cta.dz{background:var(--bad);color:#fff}
+.cta.google-signin{background:#fff;color:#000;border:.5px solid var(--bd);border-radius:14px}
+.chip,.act button{background:var(--in);border:0;border-radius:999px;color:var(--tx);font-weight:500;min-height:34px;padding:6px 14px;box-shadow:none}
+.chip.on{background:var(--ac);color:#fff;box-shadow:none}
+.act button.on{background:color-mix(in srgb,var(--ac) 18%,transparent);color:var(--ac);box-shadow:none}
+.textbtn{background:none;color:var(--ac)}.danger{color:var(--bad)}
+button:active{transform:none;opacity:.55}.bar:active{transform:none;opacity:.7}
+button:disabled{opacity:.4}
+.iconbtn{border:0;background:var(--in)}.iconbtn .badge{background:var(--bad);color:#fff}
+.badge{background:color-mix(in srgb,var(--ac) 16%,transparent);color:var(--ac);font-weight:600}
+nav{border-top:.5px solid var(--bd);background:color-mix(in srgb,var(--card) 80%,transparent);backdrop-filter:saturate(1.8) blur(20px);-webkit-backdrop-filter:saturate(1.8) blur(20px)}
+nav button{min-height:49px;padding:6px 0 2px;font-size:10px;font-weight:500;color:var(--mu)}
+nav button b{padding:0!important;background:none!important;width:26px;height:26px;margin:0 auto 2px}
+nav button b svg{width:26px;height:26px;display:block}
+nav button.on{color:var(--ac);font-weight:600}
+nav i{background:var(--bad);color:#fff;left:56%;top:2px;min-width:18px;text-align:center}
+.fab{background:var(--ac);color:#fff;height:50px;border-radius:25px;box-shadow:0 6px 18px #0004}
+.sheet{background:#0006}
+.sheet>div{background:var(--bg);border-radius:20px 20px 0 0}
+.sheet .close{background:none;color:var(--ac);font-weight:600;border:0;padding:4px;min-height:32px;background:var(--bg)}
+.sheet h2{font-size:28px;font-weight:700;letter-spacing:-.04em}
+.sheet details{background:var(--card)}
+input,textarea,select{background:var(--in);border:0;border-radius:12px;padding:12px 14px;font-size:17px;caret-color:var(--ac)}
+input:focus,textarea:focus,select:focus{box-shadow:0 0 0 3px var(--ring)}
+.strip.seg{background:var(--in);border-radius:10px;padding:2px;gap:0;overflow-x:auto}
+.strip.seg>*{flex:1 1 0;min-width:0}
+.strip.seg .chip{background:none;border-radius:8px;padding:6px 4px;font-size:12.5px;white-space:nowrap;color:var(--tx)}
+.strip.seg .chip.on{background:var(--card);box-shadow:0 1px 3px #0003,0 0 0 .5px #0001;font-weight:600}
+.msg p{border:0;background:#e9e9eb;color:#000;border-radius:18px;padding:8px 14px;box-shadow:none}
+[data-t=dark] .msg p{background:#26262a;color:#fff}
+.msg.me p{background:var(--ac);color:#fff}
+#cb{background:color-mix(in srgb,var(--card) 82%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:.5px solid var(--bd)}
+#chatText{background:var(--card);border:.5px solid var(--bd);border-radius:20px;padding:9px 14px}
+.listitem input[type=checkbox]{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--bd);background:none;padding:0;flex:none}
+.listitem input[type=checkbox]:checked{border-color:var(--ac);background:var(--ac) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7'/%3E%3C/svg%3E") center/16px no-repeat}
+.settings-row{padding:12px 4px!important;border-bottom:.5px solid var(--bd)!important;font-size:17px}
+.settings-row>span:last-child{color:var(--mu);font-size:22px}.settings-row small{font-size:13px}
+.sw{width:51px;height:31px;border-radius:16px;background:#78788052;position:relative;flex:none;transition:background .2s}
+.sw:after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px #0004;transition:transform .2s}
+.sw.on{background:var(--ok)}.sw.on:after{transform:translateX(20px)}
+.empty-state{border:0;background:var(--card)}
+#toast{top:calc(env(safe-area-inset-top,0px) + 12px);bottom:auto;border-radius:22px;background:rgba(40,40,44,.94);color:#fff;backdrop-filter:blur(20px);font-weight:500}
 </style></head><body>
 <div id="app"></div><div id="toast" role="status" aria-live="polite"></div><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -264,13 +318,15 @@ const readAt=k=>Number(store.get(key(k),'0'))||0;
 // Group-scoped collections live under groups/{gid}/..., everything else is addressed as written.
 const GS=/^(posts|expenses|lists|activity|stories|rooms|daily)(\/|$)/,gp=p=>GS.test(p)?'groups/'+gid+'/'+p:p;
 function scopedDb(r){return{collection:p=>r.collection(gp(p)),doc:p=>r.doc(gp(p)),batch:()=>r.batch(),runTransaction:f=>r.runTransaction(f)}}
+const sv=d=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>',
+NI={home:sv('<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/>'),ev:sv('<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),chat:sv('<path d="M20 12a8 8 0 0 1-11.7 7.1L4 20l1-4.1A8 8 0 1 1 20 12z"/>'),gal:sv('<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4.5 3.5 3L15.5 13 20 17"/>'),me:sv('<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.8-3.6 3.8-5.5 7.5-5.5s6.7 1.9 7.5 5.5"/>')};
 const ICON={
  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
  install:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>'
 };
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 function updateInstall(){const b=$('#installBtn');if(b)b.hidden=!ip||isStandalone()}
-function syncTheme(){document.querySelector('meta[name=theme-color]')?.setAttribute('content',th==='dark'?'#171b22':'#ffffff')}syncTheme();function toast(m){$('#toast').textContent=m;$('#toast').style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').style.opacity=0,3800)}
+function syncTheme(){document.querySelector('meta[name=theme-color]')?.setAttribute('content',th==='dark'?'#000000':'#f2f2f7')}syncTheme();function toast(m){$('#toast').textContent=m;$('#toast').style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').style.opacity=0,3800)}
 function quiet(e){console.warn('[background]',e?.step,e?.code||e?.message||e)}
 function fail(e){if(e?.code?.startsWith('auth/')){authFailure(e);return}console.warn(e?.step,e?.code||e?.message||e);const m=e?.message?.startsWith('KROG:')?t(e.message.slice(5)):e?.code==='permission-denied'?t('denied'):e?.code?.startsWith('auth/')?t('autherror'):t('error');toast(m+(e?.step?' ['+e.step+']':'')+(m===t('error')?' ('+(e?.code||e?.name||'?')+')':''))}
 function checkOnline(){if(!navigator.onLine)throw Error('KROG:offline')}
@@ -296,7 +352,7 @@ async function shrink(file,max=900){
 function viewport(){document.documentElement.style.setProperty('--vh',(window.visualViewport?.height||innerHeight)+'px')}
 viewport();window.visualViewport?.addEventListener('resize',viewport);addEventListener('resize',viewport);
 function closeSheet(){clearTimeout(sheet.expiry);sheetUnsub?.();sheetUnsub=null;$('.sheet')?.remove();focusBack?.focus?.();focusBack=null}
-function sheet(title,body){closeSheet();focusBack=document.activeElement;const el=document.createElement('div');el.className='sheet';el.innerHTML='<div role="dialog" aria-modal="true" aria-label="'+esc(title)+'">'+btn('close','✕ '+t('close'),'','chip close')+'<h2>'+esc(title)+'</h2>'+body+'</div>';el.addEventListener('click',e=>{if(e.target===el)closeSheet()});document.body.append(el);el.querySelector('button')?.focus()}
+function sheet(title,body){closeSheet();focusBack=document.activeElement;const el=document.createElement('div');el.className='sheet';el.innerHTML='<div role="dialog" aria-modal="true" aria-label="'+esc(title)+'">'+btn('close',t('close'),'','chip close')+'<h2>'+esc(title)+'</h2>'+body+'</div>';el.addEventListener('click',e=>{if(e.target===el)closeSheet()});document.body.append(el);el.querySelector('button')?.focus()}
 function cleanup(){tourOn=false;document.getElementById('tour')?.remove();unsubs.forEach(f=>f());unsubs=[];extrasUnsubs.forEach(f=>f());extrasUnsubs=[];roomUnsub?.();roomUnsub=null;sheetUnsub?.();sheetUnsub=null;started=false;dailyKey='';postsReady=false;actReady=false;posts=[];memories=[];events=[];pinnedPosts=[];memoryDay='';users={};stories=[];expenses=[];lists=[];activities=[];messages=[];for(const o of [counts,ballots,dailyReplies,fieldDrafts,chatDrafts])Object.keys(o).forEach(k=>delete o[k]);closeSheet()}
 function authFailure(e){
  const code=e?.code||'auth/unknown';const map={
@@ -411,7 +467,7 @@ async function onAuth(u){
  },fail);
 }
 function shell(){
- $('#app').innerHTML='<header><i class="krog-logo" aria-hidden="true"></i>Krog<span style="flex:1"></span>'+btn('groups','<span id="groupName"></span><span aria-hidden="true">▾</span>','aria-label="'+t('groups')+'"','chip groupbtn')+btn('notifications',ICON.bell+'<span id="bellCount" class="badge" hidden></span>','aria-label="'+t('bell')+'"','iconbtn')+btn('install',ICON.install,'id="installBtn" hidden aria-label="'+t('inst')+'"','iconbtn')+'</header><div class="status" id="status" role="status"></div><main id="main"></main><div id="cb"></div><nav>'+[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,e])=>btn('tab','<b>'+e+'</b>'+t(k)+'<i id="badge_'+k+'" hidden></i>','data-k="'+k+'"','')).join('')+'</nav>'+btn('new','＋','aria-label="'+t('post')+'" id="fab"','fab');render();
+ $('#app').innerHTML='<header><i class="krog-logo" aria-hidden="true"></i>Krog<span style="flex:1"></span>'+btn('groups','<span id="groupName"></span><span aria-hidden="true">▾</span>','aria-label="'+t('groups')+'"','chip groupbtn')+btn('notifications',ICON.bell+'<span id="bellCount" class="badge" hidden></span>','aria-label="'+t('bell')+'"','iconbtn')+btn('install',ICON.install,'id="installBtn" hidden aria-label="'+t('inst')+'"','iconbtn')+'</header><div class="status" id="status" role="status"></div><main id="main"></main><div id="cb"></div><nav>'+[['home',NI.home],['ev',NI.ev],['chat',NI.chat],['gal',NI.gal],['me',NI.me]].map(([k,e])=>btn('tab','<b>'+e+'</b>'+t(k)+'<i id="badge_'+k+'" hidden></i>','data-k="'+k+'"','')).join('')+'</nav>'+btn('new','＋','aria-label="'+t('post')+'" id="fab"','fab');render();
 }
 function stream(query,assign){unsubs.push(query.onSnapshot(s=>{assign(s);scheduleRender()},quiet))}
 function docs(s){return s.docs.map(d=>({...d.data(),id:d.id}))}
@@ -498,7 +554,7 @@ function card(p){
  }
  const pics=images(p);body+='<div class="'+(pics.length>1?'grid':'')+'">'+pics.map((v,i)=>'<button class="chip" data-a="zoom" '+idattr(id)+' data-i="'+i+'">'+image(v)+'</button>').join('')+'</div>';
  const reactions=p.reactions||{},lc=p.likes||[];
- return '<article class="card" id="post_'+esc(id)+'"><div class="row">'+avatar(u)+'<div style="flex:1">'+profileLink(u)+(p.uid===state?.adminUid?'<span class="badge">'+ux('Skrbnik','Admin')+'</span>':'')+'<div class="mu">'+ago(p.ts)+(p.pinned?' · 📌 '+t('pinned'):'')+'</div></div>'+((own||isAdmin())?btn('postMenu','⋯',idattr(id)+' aria-label="'+t('edit')+'"'):'')+'</div>'+body+reactSummary(reactList(p,true),'p',id)+'<div class="act">'+E.map(e=>btn('react',e+' '+(Object.values(reactions).filter(x=>x===e).length+(e==='❤️'?lc.filter(uid=>!Object.hasOwn(reactions,uid)).length:0)||''),idattr(id)+' data-e="'+e+'"',(reactions[me.id]===e||(!reactions[me.id]&&e==='❤️'&&lc.includes(me.id)))?'chip on':'chip')).join('')+btn('comments','💬 '+comments.length,idattr(id))+btn('save',savedIds().includes(id)?'🔖 '+ux('Shranjeno','Saved'):'🔖',idattr(id)+' aria-label="'+ux('Shrani objavo','Save post')+'"',savedIds().includes(id)?'chip on':'chip')+'</div>'+(expanded.has(id)?comments.map(c=>'<p class="cm"><b>'+esc(c.name)+'</b><span>'+esc(c.text)+'</span><small class="mu">'+ago(c.ts)+'</small>'+((c.uid===me.id||isAdmin())?btn('delComment','×',idattr(id)+' data-ts="'+c.ts+'" aria-label="'+t('remove')+'"','chip tiny'):'')+'</p>').join('')+'<div class="row"><input id="comment_'+id+'" maxlength="1000" placeholder="'+t('cm')+'" aria-label="'+t('cm')+'">'+btn('comment','➤',idattr(id))+'</div>':'')+'</article>';
+ return '<article class="card" id="post_'+esc(id)+'"><div class="row">'+avatar(u)+'<div style="flex:1">'+profileLink(u)+(p.uid===state?.adminUid?'<span class="badge">'+ux('Skrbnik','Admin')+'</span>':'')+'<div class="mu">'+ago(p.ts)+(p.pinned?' · 📌 '+t('pinned'):'')+'</div></div>'+((own||isAdmin())?btn('postMenu','⋯',idattr(id)+' aria-label="'+t('edit')+'"'):'')+'</div>'+body+reactSummary(reactList(p,true),'p',id)+'<div class="act">'+E.map(e=>btn('react',e+' '+(Object.values(reactions).filter(x=>x===e).length+(e==='❤️'?lc.filter(uid=>!Object.hasOwn(reactions,uid)).length:0)||''),idattr(id)+' data-e="'+e+'"',(reactions[me.id]===e||(!reactions[me.id]&&e==='❤️'&&lc.includes(me.id)))?'chip on':'chip')).join('')+btn('comments','💬 '+comments.length,idattr(id))+btn('save',savedIds().includes(id)?'🔖 '+ux('Shranjeno','Saved'):'🔖',idattr(id)+' aria-label="'+ux('Shrani objavo','Save post')+'"',savedIds().includes(id)?'chip on':'chip')+'</div>'+(expanded.has(id)?comments.map(c=>'<p class="cm"><b>'+esc(c.name)+'</b><span>'+esc(c.text)+'</span><small class="mu">'+ago(c.ts)+'</small>'+((c.uid===me.id||isAdmin())?btn('delComment','×',idattr(id)+' data-ts="'+c.ts+'" aria-label="'+t('remove')+'"','chip tiny'):'')+'</p>').join('')+'<div class="row"><input id="comment_'+id+'" maxlength="1000" placeholder="'+t('cm')+'" aria-label="'+t('cm')+'">'+btn('comment',ux('Pošlji','Send'),idattr(id),'chip on')+'</div>':'')+'</article>';
 }
 function ux(sl,en){return L==='sl'?sl:en}
 function toolsHTML(){return '<div class="strip" aria-label="'+t('tools')+'">'+btn('expenses','€ '+t('expenses'))+btn('lists','☑ '+t('lists'))+(tab==='home'?btn('savedOnly','🔖 '+ux('Shranjeno','Saved'),'',onlySaved?'chip on':'chip'):'')+'</div>'}
@@ -506,7 +562,7 @@ const savedIds=()=>{try{return JSON.parse(store.get(key('saved'),'[]'))}catch{re
 function composeCard(){return '<button class="card what" data-a="new"><span class="av-wrap">'+avatar(me)+'</span><span>'+ux('Kaj je novega, ','What’s new, ')+esc(me.name.split(' ')[0])+'?</span><b aria-hidden="true">📷</b></button>'}
 function greeting(){const h=new Date().getHours();return '<div class="page-heading"><h2>'+ux(h<5?'Lahko noč':h<12?'Dobro jutro':h<18?'Dober dan':'Dober večer',h<5?'Good night':h<12?'Good morning':h<18?'Good afternoon':'Good evening')+', '+esc(me.name.split(' ')[0])+'</h2><p>'+esc(state.name)+' · '+activeUsers().length+' '+ux('članov','members')+'</p></div>'}
 function eventPreview(){return '<section class="card"><h3>📅 '+ux('Prihajajoči dogodki','Upcoming events')+'</h3>'+ (upcoming().slice(0,3).map(p=>'<div class="event-preview"><b>'+esc(p.title)+'</b><span>'+esc(new Date(p.date).toLocaleString(L))+'</span></div>').join('')||'<p class="mu">'+ux('Trenutno ni prihajajočih dogodkov.','No upcoming events yet.')+'</p>')+btn('tab',ux('Poglej vse dogodke →','View all events →'),'data-k="ev"')+'</section>'}
-const SK='<div class="card sk" aria-hidden="true"></div>'.repeat(3);function moreBtn(){return postsReady&&posts.length>=postLimit?btn('more',t('more'),'','cta soc'):''}function feedChips(){return '<div class="strip" aria-label="'+ux('Filter objav','Filter posts')+'">'+[['all',ux('Vse','All')],['post',ux('Objave','Posts')],['photo',ux('Fotografije','Photos')],['poll',ux('Ankete','Polls')],['event',ux('Dogodki','Events')]].map(([k,l])=>btn('feedType',l,'data-id="'+k+'"',feedType===k?'chip on':'chip')).join('')+'</div>'}
+const SK='<div class="card sk" aria-hidden="true"></div>'.repeat(3);function moreBtn(){return postsReady&&posts.length>=postLimit?btn('more',t('more'),'','cta soc'):''}function feedChips(){return '<div class="strip seg" aria-label="'+ux('Filter objav','Filter posts')+'">'+[['all',ux('Vse','All')],['post',ux('Objave','Posts')],['photo',ux('Fotografije','Photos')],['poll',ux('Ankete','Polls')],['event',ux('Dogodki','Events')]].map(([k,l])=>btn('feedType',l,'data-id="'+k+'"',feedType===k?'chip on':'chip')).join('')+'</div>'}
 function pageHeading(title,description){return '<div class="page-heading"><h2>'+esc(title)+'</h2><p>'+esc(description)+'</p></div>'}
 function emptyState(icon,title,description){return '<div class="empty-state"><span>'+icon+'</span><b>'+esc(title)+'</b><p>'+esc(description)+'</p></div>'}
 function setting(action,title,description){return btn(action,'<span><b>'+esc(title)+'</b><small>'+esc(description)+'</small></span><span aria-hidden="true">›</span>','','settings-row')}
@@ -528,7 +584,7 @@ function render(){
  if(tab==='chat')h=chatHTML();
  m.classList.toggle('chat-view',tab==='chat');m.innerHTML=h;for(const el of m.querySelectorAll('input[id],textarea[id]'))if(Object.hasOwn(fieldDrafts,el.id))el.value=fieldDrafts[el.id];
  if(tab==='chat'){
- if(!$('#chatText')){render.room=null;$('#cb').innerHTML='<div id="quote" class="mu" style="width:100%"></div><label class="chip" aria-label="'+ux('Poslati fotografijo','Send a photo')+'">📷<input id="chatPhoto" type="file" accept="image/*" class="visually-hidden" aria-label="'+ux('Poslati fotografijo','Send a photo')+'"></label><input id="chatText" maxlength="4000" aria-label="'+t('msg')+'" placeholder="'+t('msg')+'" style="flex:1;width:0">'+btn('sendMessage','➤','aria-label="'+ux('Pošlji sporočilo','Send message')+'"');}
+ if(!$('#chatText')){render.room=null;$('#cb').innerHTML='<div id="quote" class="mu" style="width:100%"></div><label class="chip" aria-label="'+ux('Poslati fotografijo','Send a photo')+'">📷<input id="chatPhoto" type="file" accept="image/*" class="visually-hidden" aria-label="'+ux('Poslati fotografijo','Send a photo')+'"></label><input id="chatText" maxlength="4000" aria-label="'+t('msg')+'" placeholder="'+t('msg')+'" style="flex:1;width:0">'+btn('sendMessage','↑','aria-label="'+ux('Pošlji sporočilo','Send message')+'"');}
  if(render.room!==room){$('#chatText').value=chatDrafts[room]||'';render.room=room;}
  $('#quote').innerHTML=rp?'<span><b>'+t('reply')+' · '+esc(nameOf(rp.uid))+'</b><br>'+esc((rp.text||'📷').slice(0,160))+'</span>'+btn('cancelReply','✕','aria-label="'+t('close')+'"'):'';m.scrollTop=oldTab!==tab||nearBottom?m.scrollHeight:top;
  }else{$('#cb').innerHTML='';m.scrollTop=oldTab===tab?top:0}
@@ -537,8 +593,8 @@ function render(){
 }
 function meHTML(){
  const ac=activeUsers();
- return pageHeading(ux('Profil in nastavitve','Profile and settings'),ux('Tvoj profil, skupina in osebne nastavitve.','Your profile, group and preferences.'))+'<div class="card profile-hero">'+avatar(me)+'<h3>'+esc(me.name)+'</h3><p class="mu">'+esc(me.bio||ux('Dodaj nekaj besed o sebi.','Tell the group a little about yourself.'))+'</p><div class="stats"><span><b>'+posts.filter(p=>p.uid===me.id).length+'</b>'+ux('objav','posts')+'</span><span><b>'+ac.length+'</b>'+ux('članov','members')+'</span><span><b>'+savedIds().length+'</b>'+ux('shranjeno','saved')+'</span></div><div class="act">'+btn('editProfile','📷 '+ux('Uredi profil in fotografijo','Edit profile and photo'))+'</div></div><section class="card"><h3>'+ux('Osebne nastavitve','Preferences')+'</h3>'+setting('lang',t('lang'),L==='sl'?'Slovenščina':'English')+setting('theme',t('theme'),th==='dark'?ux('Temna · klikni za svetlo','Dark · switch to light'):ux('Svetla · klikni za temno','Light · switch to dark'))+setting('tourStart',ux('Vodič po aplikaciji','App tour'),ux('Interaktivni ogled vseh zavihkov','Interactive walkthrough of every tab'))+setting('help',ux('Pomoč in navodila','Help and instructions'),ux('Odgovori na pogosta vprašanja','Answers to common questions'))+setting('rules',ux('Pravila skupnosti in zasebnost','Community rules and privacy'),ux('Kako varujemo vaš krog','How we protect your circle'))+setting('logout',t('out'),ux('Odjavi se iz svojega računa','Sign out of your account'))+'</section>'+
- '<div class="card"><div class="mu">'+t('group')+'</div><h3>'+esc(state.name)+'</h3><div class="act">'+btn('groups',t('groups'))+(isAdmin()?btn('renameGroup',t('renameGroup')):btn('leaveGroup',t('leave')))+'</div></div>'+
+ return pageHeading(ux('Profil in nastavitve','Profile and settings'),ux('Tvoj profil, skupina in osebne nastavitve.','Your profile, group and preferences.'))+'<div class="card profile-hero">'+avatar(me)+'<h3>'+esc(me.name)+'</h3><p class="mu">'+esc(me.bio||ux('Dodaj nekaj besed o sebi.','Tell the group a little about yourself.'))+'</p><div class="stats"><span><b>'+posts.filter(p=>p.uid===me.id).length+'</b>'+ux('objav','posts')+'</span><span><b>'+ac.length+'</b>'+ux('članov','members')+'</span><span><b>'+savedIds().length+'</b>'+ux('shranjeno','saved')+'</span></div><div class="act">'+btn('editProfile','📷 '+ux('Uredi profil in fotografijo','Edit profile and photo'))+'</div></div><section class="card"><h3>'+ux('Osebne nastavitve','Preferences')+'</h3>'+setting('lang',t('lang'),L==='sl'?'Slovenščina':'English')+btn('theme','<span><b>'+t('theme')+'</b><small>'+(th==='dark'?ux('Temna','Dark'):ux('Svetla','Light'))+'</small></span><span class="sw'+(th==='dark'?' on':'')+'" role="switch" aria-checked="'+(th==='dark')+'"></span>','','settings-row')+setting('tourStart',ux('Vodič po aplikaciji','App tour'),ux('Interaktivni ogled vseh zavihkov','Interactive walkthrough of every tab'))+setting('help',ux('Pomoč in navodila','Help and instructions'),ux('Odgovori na pogosta vprašanja','Answers to common questions'))+setting('rules',ux('Pravila skupnosti in zasebnost','Community rules and privacy'),ux('Kako varujemo vaš krog','How we protect your circle'))+setting('logout',t('out'),ux('Odjavi se iz svojega računa','Sign out of your account'))+'</section>'+
+ '<div class="card"><div class="mu">'+t('group')+'</div><h3>'+esc(state.name)+'</h3><div class="act">'+btn('groups',t('groups'))+(isAdmin()?btn('renameGroup',t('renameGroup'))+btn('deleteGroup','🗑 '+ux('Izbriši skupino','Delete group'),'','chip danger'):btn('leaveGroup',t('leave')))+'</div></div>'+
  (isAdmin()?'<div class="card"><h3>'+t('inv')+'</h3><p>'+esc(cfg.code||'')+'</p><div class="act">'+btn('copyCode',t('copy'))+btn('newCode',t('nc'))+btn('export',t('export'))+btn('cleanup',t('cleanup'))+'</div></div>':'')+
  '<div class="card"><h3>'+t('mem')+' · '+ac.length+'/20</h3>'+ac.map(u=>'<div class="row" style="margin-top:10px">'+avatar(u)+profileLink(u)+(isAdmin()&&u.id!==me.id?btn('reject','×',idattr(u.id)+' aria-label="'+t('remove')+'"'):'')+'</div>').join('')+'</div>';
 }
@@ -715,6 +771,35 @@ function reactSummary(list,kind,id){
  shown=names.slice(0,2).map(esc).join(', ')+(names.length>2?ux(' in še '+(names.length-2),' and '+(names.length-2)+' more'):'');
  return btn('whoReacted','<span class="rem">'+top.join('')+'</span> '+shown,idattr(id)+' data-k="'+kind+'" aria-label="'+ux('Kdo se je odzval','Who reacted')+'"','rsum');
 }
+const SUBS={posts:['results','ballots'],lists:['items'],rooms:['msgs'],daily:['answers']};let wipeSkipped=0;
+async function wipeCol(path,prog){
+ for(;;){
+  const s=await raw.collection(path).limit(200).get();if(s.empty)return;
+  try{
+   for(const d of s.docs)for(const sub of SUBS[path.split('/').pop()]||[])await wipeCol(d.ref.path+'/'+sub,prog).catch(e=>{if(!['ballots','results'].includes(sub))throw e;wipeSkipped++});
+   const b=raw.batch();s.docs.forEach(d=>b.delete(d.ref));await b.commit();
+  }catch(e){e.step=e.step||path.split('/').slice(2).join('/');throw e}
+  prog?.(path);
+ }
+}
+async function deleteGroupNow(){
+ const g=gid,code=cfg.code,base='groups/'+g+'/';let err=null;wipeSkipped=0;
+ joining=true;cleanup();gid=null;state=null;
+ $('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+ux('Brišem skupino. Ne zapiraj aplikacije.','Deleting the group. Keep the app open.')+'</p><p class="mu" id="delProg" role="status"></p></div>';
+ const prog=p=>{const el=$('#delProg');if(el)el.textContent=ux('Brišem: ','Deleting: ')+p.replace(base,'').split('/')[0]};
+ try{
+  if(code)await raw.doc('invites/'+code).delete().catch(()=>{});
+  await wipeCol(base+'rooms/all/msgs',prog);
+  for(const c of ['posts','stories','expenses','lists','activity','rooms','enrollment','members','meta','private'])await wipeCol(base+c,prog);
+  await Promise.all(Array.from({length:45},(_,i)=>wipeCol(base+'daily/'+dayKey(new Date(Date.now()-i*864e5))+'/answers').catch(()=>{})));
+  await raw.doc('groups/'+g).delete();
+  await db.doc('users/'+me.id).update({gids:F.arrayRemove(g)});
+  store.set('g:'+me.id,'');toast(ux('Skupina je izbrisana.','Group deleted.')+(wipeSkipped?' '+ux('Nekaj anonimnih glasov je ostalo v bazi.','Some anonymous votes remain in the database.'):''));
+ }catch(e){err=e}
+ joining=false;tab='home';room='all';rp=null;search='';postLimit=20;expanded.clear();render.room=null;render.tab=null;opening='';
+ if(err)fail(err);
+ try{await route(session)}catch(e){fail(e)}
+}
 const pendingActions=new Set();
 const A={
 close:closeSheet,toli:()=>authUI('li'),tosu:()=>authUI('su'),
@@ -723,7 +808,10 @@ signup:()=>{const name=$('#an').value,code=$('#ac').value,email=$('#ae').value.t
 finish:()=>{const name=$('#an').value,code=$('#ac').value;return runJoining(async()=>{await createProfile(name);return code.trim()?joinWithCode(code):null})},
 google:googleLogin,
 reset:async()=>{const email=$('#ae').value.trim();if(!email)throw Error('KROG:invalid');await auth.sendPasswordResetEmail(email);toast(t('resetSent'))},
-logout:()=>auth.signOut(),feedType:(el,id)=>{feedType=id;render()},whoReacted:(el,id)=>{const k=el.dataset.k,x=k==='m'?messages.find(m=>m.id===id):findPost(id);if(!x)return;
+logout:()=>auth.signOut(),deleteGroup:()=>{if(!isAdmin())return toast(ux('Skupino lahko izbriše samo skrbnik.','Only the admin can delete the group.'));
+ sheet(ux('Izbriši skupino','Delete group'),'<p><b>'+esc(state.name)+'</b></p><p>'+ux('Trajno se izbrišejo objave z odzivi in anketami (skupaj s fotografijami), zgodbe, skupinski in zasebni klepet, stroški, seznami, člani in vabilna koda. Tega ni mogoče razveljaviti.','Permanently deletes posts with reactions and polls (including photos), stories, group and private chats, expenses, lists, members and the invite code. This cannot be undone.')+'</p><p class="mu">'+ux('Profili članov (ime in slika) so ločeni in ostanejo. Ostali člani skupino ob naslednjem odprtju samodejno izgubijo s seznama.','Member profiles (name and photo) are separate and stay. Other members lose the group from their list the next time they open the app.')+'</p>'+btn('confirmExport','⬇ '+ux('Najprej izvozi arhiv','Export archive first'),'','cta soc')+'<label class="field">'+ux('Za potrditev vpiši ime skupine','To confirm, type the group name')+': <b>'+esc(state.name)+'</b><input id="delConfirm" autocomplete="off" maxlength="60"></label>'+btn('confirmDelete','🗑 '+ux('Trajno izbriši skupino','Permanently delete group'),'','cta dz'))},
+confirmDelete:()=>{if(!isAdmin())return;const v=$('#delConfirm').value.trim();if(v!==state.name){toast(ux('Ime se ne ujema. Vpiši ga natanko tako, kot je zapisano.','Name does not match. Type it exactly as shown.'));$('#delConfirm').focus();return}if(!confirm(ux('Zadnja potrditev: skupina bo trajno izbrisana.','Final check: the group will be permanently deleted.')))return;return deleteGroupNow()},
+feedType:(el,id)=>{feedType=id;render()},whoReacted:(el,id)=>{const k=el.dataset.k,x=k==='m'?messages.find(m=>m.id===id):findPost(id);if(!x)return;
  const list=reactList(x,k==='p').sort((a,b)=>E.indexOf(a[1])-E.indexOf(b[1])),cnt={};list.forEach(([,e])=>cnt[e]=(cnt[e]||0)+1);
  sheet(ux('Odzivi','Reactions')+' · '+list.length,'<div class="row rchips">'+E.filter(e=>cnt[e]).map(e=>'<span class="chip on">'+e+' '+cnt[e]+'</span>').join('')+'</div>'+list.map(([u,e])=>'<div class="row rrow">'+avatar(users[u]||{name:'?'})+'<b style="flex:1">'+esc(u===me.id?ux('Ti','You'):nameOf(u))+'</b><span class="rbig">'+e+'</span></div>').join(''))},
 tourStart:()=>{closeSheet();tourOn=true;tourI=0;tourShow()},tourNext:()=>{tourI++;tourShow()},tourBack:()=>{tourI=Math.max(0,tourI-1);tourShow()},tourEnd,
