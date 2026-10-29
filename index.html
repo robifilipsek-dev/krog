@@ -117,6 +117,7 @@ body{line-height:1.55}#app{background:var(--bg)}header{padding:16px 18px;border-
 @media(max-width:380px){main{padding-left:12px;padding-right:12px}header{padding:12px}.card{padding:14px}nav button b{padding:3px 12px}.sheet>div{padding:16px}}
 .krog-logo{display:inline-block;width:24px;height:24px;border:4px solid var(--ac);border-radius:50%;position:relative;flex:none}.krog-logo:after{content:'';position:absolute;width:8px;height:8px;border-radius:50%;background:var(--y);right:-6px;top:-5px}.brand-mark{background:transparent}.brand-mark .krog-logo{width:48px;height:48px;border-width:8px}.brand-mark .krog-logo:after{width:15px;height:15px;right:-10px;top:-8px}.auth-error{padding:14px;border:1px solid #c43846;border-radius:12px;background:var(--card);font-size:14px;overflow-wrap:anywhere}.auth-error:empty{display:none}.stories-section{margin:20px 0}.stories-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.stories-heading h3{font-size:19px}.stories-track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;padding:12px 0}.story-tile{position:relative;flex:0 0 156px;min-height:190px;border:1px solid var(--bd);border-radius:20px;overflow:hidden;background:var(--card);text-align:left;padding:0;scroll-snap-align:start}.story-tile img{height:110px;width:100%;object-fit:cover;margin:0;border-radius:0}.story-copy{display:block;padding:12px}.story-copy b,.story-copy small{display:block}.story-copy small{color:var(--mu);margin-top:4px}.story-text{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;margin-top:8px}.story-placeholder{padding:18px;background:var(--in);font-size:24px;color:var(--ac)}.story-empty{margin-top:12px;padding:18px;border:1px dashed var(--bd);border-radius:16px;color:var(--mu)}.story-full img{max-height:55dvh;object-fit:contain}.story-full .line{font-size:18px;margin:16px 0}.sheet .row>input{min-width:0}.groupbtn{min-width:0}header #groupName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}.checks label{min-height:44px}.listitem .done{opacity:.65}nav button:focus-visible{outline-offset:-4px}
 .visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.chip:focus-within{outline:2px solid var(--ac);outline-offset:3px}[aria-busy="true"]{cursor:progress;opacity:.65}.sheet input:disabled{opacity:.6}#listProgress{padding:10px 12px;background:var(--in);border-radius:12px}.listitem select{min-height:44px}#cb{padding-bottom:max(10px,env(safe-area-inset-bottom))}#chatText{min-width:0}.sheet>div{padding-bottom:max(22px,env(safe-area-inset-bottom))}@media(max-width:420px){.sheet .checks{grid-template-columns:1fr 1fr}.sheet .row>label.field{min-width:0;flex:1}}
+.photo-previews>div{position:relative}.photo-previews img{width:100%;height:110px;object-fit:cover;border-radius:12px}.photo-previews button{position:absolute;top:4px;right:4px;background:var(--card);box-shadow:0 2px 8px #0003}.photo-view img{max-height:65dvh;object-fit:contain;margin:0}.photo-navigation{justify-content:space-between}.photo-picker input{width:100%;max-width:100%}.sheet textarea{width:100%}
 </style></head><body>
 <div id="app"></div><div id="toast" role="status" aria-live="polite"></div><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -456,14 +457,14 @@ function chatHTML(){
 function render(){
  if(!started||!me||!$('#main'))return;
  const m=$('#main'),top=m.scrollTop,nearBottom=m.scrollHeight-m.clientHeight-top<100,oldTab=render.tab;
- $('#status').textContent=navigator.onLine?'':t('offline');if($('#groupName'))$('#groupName').textContent=state?.name||'';updateInstall();document.querySelectorAll('nav button').forEach(b=>(b.classList.toggle('on',b.dataset.k===tab),b.setAttribute('aria-current',b.dataset.k===tab?'page':'false')));$('#fab').hidden=!['home','ev','gal'].includes(tab);
+ $('#status').textContent=navigator.onLine?'':t('offline');if($('#groupName'))$('#groupName').textContent=state?.name||'';updateInstall();document.querySelectorAll('nav button').forEach(b=>(b.classList.toggle('on',b.dataset.k===tab),b.setAttribute('aria-current',b.dataset.k===tab?'page':'false')));$('#fab').hidden=!['home','ev','gal'].includes(tab);$('#fab').setAttribute('aria-label',tab==='gal'?ux('Dodaj fotografije','Add photos'):tab==='ev'?ux('Dodaj dogodek','Add event'):ux('Nova objava','New post'));
  let h='';
  if(tab==='home'){
  const filtered=[...new Map([...pinnedPosts,...posts].map(p=>[p.id,p])).values()].filter(p=>[p.text,p.title,p.q,p.name].join(' ').toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a,b)=>Number(!!b.pinned)-Number(!!a.pinned)||b.ts-a.ts);
  h=pageHeading(ux('Vaš skupni kotiček','Your shared space'),ux('Novosti, dogovori in drobni trenutki.','Updates, plans and everyday moments.'))+toolsHTML()+eventPreview()+storyHTML()+dailyHTML()+rituals()+'<div class="row"><input id="search" value="'+esc(search)+'" placeholder="'+t('search')+'" aria-label="'+t('search')+'">'+btn('search','⌕')+'</div><p class="mu">'+posts.length+' '+t('loaded')+'</p>'+filtered.map(card).join('')+(!filtered.length?'<p class="empty">'+t('noresults')+'</p>':'')+btn('more',t('more'),'','cta');
  }
  if(tab==='ev')h=pageHeading(t('ev'),ux('Načrtujte srečanja in uredite skupne obveznosti.','Plan your time together and manage shared tasks.'))+toolsHTML()+'<h2 class="section-title">'+ux('Prihajajoči dogodki','Upcoming events')+'</h2>'+(upcoming().map(card).join('')||'<div class="card">'+ux('Ni prihajajočih dogodkov. Dodaj prvega z gumbom +.','No upcoming events. Add one with the + button.')+'</div>')+'<h2 class="section-title">'+t('past')+'</h2>'+ (posts.filter(p=>p.type==='event'&&new Date(p.date)<new Date()).sort((a,b)=>new Date(b.date)-new Date(a.date)).map(card).join('')||'<p class="mu">'+ux('Med naloženimi objavami ni preteklih dogodkov.','No past events in loaded posts.')+'</p>')+btn('more',t('more'))+'<h2 class="section-title">'+ux('Dogovarjanje za termin','Find a date')+'</h2>'+posts.filter(p=>p.type==='when').map(card).join('');
- if(tab==='gal')h=pageHeading(t('gal'),ux('Skupni trenutki, zbrani na enem mestu.','Shared moments, together in one place.'))+(!posts.some(p=>images(p).length)?emptyState('🖼️',ux('Prostor za vaše spomine','A place for your memories'),ux('Dodaj fotografijo z gumbom +.','Add a photo using the + button.')):'')+'<div class="gal">'+posts.flatMap(p=>images(p).map((v,i)=>'<button data-a="zoom" '+idattr(p.id)+' data-i="'+i+'">'+image(v)+'</button>')).join('')+'</div>'+btn('more',t('more'));
+ if(tab==='gal')h=pageHeading(t('gal'),ux('Skupni trenutki, zbrani na enem mestu.','Shared moments, together in one place.'))+(!posts.some(p=>images(p).length)?emptyState('🖼️',ux('Prostor za vaše spomine','A place for your memories'),ux('Dodaj fotografijo z gumbom +.','Add a photo using the + button.')):'')+'<div class="gal">'+posts.flatMap(p=>images(p).map((v,i)=>'<button data-a="zoom" '+idattr(p.id)+' data-i="'+i+'" aria-label="'+ux('Odpri fotografijo','Open photo')+' '+(i+1)+' · '+esc(nameOf(p.uid))+'">'+image(v)+'</button>')).join('')+'</div>'+btn('more',t('more'));
  if(tab==='me')h=meHTML();
  if(tab==='chat')h=chatHTML();
  m.classList.toggle('chat-view',tab==='chat');m.innerHTML=h;for(const el of m.querySelectorAll('input[id],textarea[id]'))if(Object.hasOwn(fieldDrafts,el.id))el.value=fieldDrafts[el.id];
@@ -495,23 +496,32 @@ function showGuide(){
 }
 
 function composer(p=null){
- draftImages=p?images(p):[];const type=p?.type||(tab==='ev'?'event':'post');sheet(p?t('edit'):t('post'),(!p?'<select id="postType" aria-label="'+t('post')+'">'+['post','poll','anon','event','when'].map(k=>'<option value="'+k+'">'+t(k)+'</option>').join('')+'</select>':'<input id="postType" type="hidden" value="'+type+'">')+
- '<div id="specialFields"></div>'+textarea('postText','txt',p?.text||'')+'<label class="field">'+t('mentions')+'<select id="mentionPick"><option value="">@</option>'+activeUsers().map(u=>'<option value="'+esc(u.name)+'">'+esc(u.name)+'</option>').join('')+'</select></label>'+
- '<div id="imagePreview"></div><label class="chip">'+t('photo')+'<input id="postPhotos" type="file" accept="image/*" multiple hidden></label>'+btn('publish',t('save'),p?idattr(p.id):'','cta'));
+ draftImages=p?images(p):[];const gallery=!p&&tab==='gal',event=!p&&tab==='ev',type=p?.type||(event?'event':'post');
+ const choices=event?['event','when']:['post','poll','anon','event','when'];
+ sheet(p?t('edit'):gallery?ux('Dodaj fotografije','Add photos'):event?ux('Nov dogodek','New event'):ux('Nova objava','New post'),
+ (!p&&!gallery?'<label class="field">'+ux('Vrsta','Type')+'<select id="postType">'+choices.map(k=>'<option value="'+k+'">'+t(k)+'</option>').join('')+'</select></label>':'<input id="postType" type="hidden" value="'+type+'">')+
+ (gallery?'<input id="galleryComposer" type="hidden"><p class="mu">'+ux('Izberi do 3 fotografije za skupno galerijo. Vidne bodo tudi med objavami skupine.','Choose up to 3 photos for the shared gallery. They will also appear in the group feed.')+'</p>':'')+
+ '<div id="specialFields"></div><div id="imagePreview"></div><label class="photo-picker">📷 '+ux('Izberi fotografije','Choose photos')+'<input id="postPhotos" type="file" accept="image/*" multiple></label><p id="photoCount" class="mu" role="status"></p>'+
+ '<label class="field"><span id="postTextLabel">'+(gallery?ux('Opis fotografij (neobvezno)','Photo caption (optional)'):ux('Besedilo','Text'))+'</span><textarea id="postText" maxlength="4000">'+esc(p?.text||'')+'</textarea></label>'+
+ (!gallery?'<label class="field">'+ux('Omeni člana (neobvezno)','Mention a member (optional)')+'<select id="mentionPick"><option value="">'+ux('Izberi člana','Choose a member')+'</option>'+activeUsers().map(u=>'<option value="'+esc(u.name)+'">'+esc(u.name)+'</option>').join('')+'</select></label>':'')+
+ btn('publish',p?t('save'):gallery?ux('Dodaj v galerijo','Add to gallery'):t('send'),p?idattr(p.id):'','cta'));
  $('#postType').value=type;composerFields(p);previewImages();
 }
+
 function composerFields(p=null){
- const type=$('#postType').value;let h='';
+ const type=$('#postType').value;let h='';const label=$('#postTextLabel');if(label&&!$('#galleryComposer'))label.textContent=type==='post'?ux('Kaj želiš deliti?','What would you like to share?'):ux('Dodatne informacije (neobvezno)','Additional details (optional)');
  if(['event','when'].includes(type))h+=field('postTitle','evt','text',p?.title||'','maxlength="120"');
- if(type==='event')h+=field('postDate','dates','datetime-local',p?.date?localInput(new Date(p.date)):'');
+ if(type==='event')h+='<label class="field">'+ux('Datum in ura','Date and time')+'<input id="postDate" type="datetime-local" value="'+(p?.date?localInput(new Date(p.date)):'')+'"></label>';
  if(type==='when')h+='<p class="mu">'+t('dates')+'</p>'+[0,1,2,3].map(i=>'<input class="dateOption" type="datetime-local" aria-label="'+t('dates')+' '+(i+1)+'" value="'+(p?.opts?.[i]?localInput(new Date(p.opts[i])):'')+'">').join('');
  if(['poll','anon'].includes(type))h+=field('pollQuestion','q','text',p?.q||'','maxlength="240"')+textarea('pollOptions','opt',(p?.opts||[]).join('\n'),1000)+(type==='anon'?'<p class="mu">'+t('anonHint')+'</p>':'');
  $('#specialFields').innerHTML=h;if(p&&['poll','anon','when'].includes(type))$('#specialFields').querySelectorAll('input,textarea').forEach(el=>el.disabled=true);
 }
-function previewImages(){const el=$('#imagePreview');if(el)el.innerHTML='<div class="grid">'+draftImages.map((v,i)=>'<div>'+image(v)+btn('removeImage','×','data-i="'+i+'" aria-label="'+t('remove')+'"')+'</div>').join('')+'</div>'}
+function previewImages(){const el=$('#imagePreview');if(el)el.innerHTML='<div class="grid photo-previews">'+draftImages.map((v,i)=>'<div>'+image(v)+btn('removeImage','×','data-i="'+i+'" aria-label="'+ux('Odstrani fotografijo','Remove photo')+' '+(i+1)+'"')+'</div>').join('')+'</div>';const count=$('#photoCount');if(count)count.textContent=draftImages.length+' / 3 · '+ux('izbranih fotografij','photos selected');const input=$('#postPhotos');if(input)input.disabled=draftImages.length>=3;const save=$('.sheet [data-a="publish"]');if(save&&$('#galleryComposer'))save.disabled=!draftImages.length;}
+function photoView(id,index=0){const p=findPost(id);if(!p)return toast(t('noresults'));const pics=images(p);if(!pics.length)return toast(t('noresults'));index=Math.max(0,Math.min(index,pics.length-1));sheet(ux('Fotografija','Photo')+(pics.length>1?' '+(index+1)+' / '+pics.length:''),'<div class="photo-view">'+image(pics[index])+'</div><p class="mu">'+esc(nameOf(p.uid))+' · '+ago(p.ts)+'</p>'+(p.text?'<p class="line">'+esc(p.text)+'</p>':'')+(pics.length>1?'<div class="row photo-navigation">'+btn('zoom','← '+ux('Prejšnja','Previous'),idattr(id)+' data-i="'+(index-1)+'" '+(index===0?'disabled':''))+btn('zoom',ux('Naslednja','Next')+' →',idattr(id)+' data-i="'+(index+1)+'" '+(index===pics.length-1?'disabled':''))+'</div>':''));}
+
 function localInput(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)}
 async function publish(id){
- checkOnline();const type=$('#postType').value,text=$('#postText').value.trim(),existing=id?findPost(id):null;
+ checkOnline();if($('#galleryComposer')&&!draftImages.length){toast(ux('Najprej izberi vsaj eno fotografijo.','Choose at least one photo first.'));return}const panel=$('.sheet');const type=$('#postType').value,text=$('#postText').value.trim(),existing=id?findPost(id):null;
  const d={uid:me.id,name:me.name,type,text,ts:existing?.ts||ts(),likes:existing?.likes||[],comments:existing?.comments||[]};
  if(draftImages.length){d.img=draftImages[0];d.imgs=draftImages.slice(1)}
  if(type==='poll'||type==='anon'){d.q=$('#pollQuestion').value.trim();d.opts=$('#pollOptions').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!d.q||d.opts.length<2||d.opts.length>8||d.opts.some(x=>x.length>120)||new Set(d.opts).size!==d.opts.length)throw Error('KROG:invalid');d.votes={}}
@@ -521,7 +531,7 @@ async function publish(id){
  const ref=id?db.doc('posts/'+id):db.collection('posts').doc(),batch=db.batch();
  if(existing){const patch={text,editedAt:ts(),img:d.img||F.delete(),imgs:d.imgs||F.delete()};if(type==='event')Object.assign(patch,{title:d.title,date:d.date});batch.update(ref,patch)}
  else{batch.set(ref,d);activity(batch,type==='event'?'event':'post',ref.id,d)}
- await batch.commit();closeSheet();toast(t('saved'));
+ await batch.commit();if(panel.isConnected)closeSheet();toast(t('saved'));
 }
 async function updateOwnMap(id,field,value){
  checkOnline();await db.runTransaction(async tx=>{const ref=db.doc('posts/'+id),s=await tx.get(ref);if(!s.exists)throw Error('KROG:invalid');const d=s.data();tx.update(ref,{[field]:{...(d[field]||{}),[me.id]:value}})});
@@ -622,7 +632,7 @@ react:(el,id)=>react(id,el.dataset.e),vote:(el,id)=>updateOwnMap(id,'votes',+el.
 rsvp:(el,id)=>updateOwnMap(id,'rsvp',el.dataset.v),
 free:async(el,id)=>{checkOnline();await db.runTransaction(async tx=>{const ref=db.doc('posts/'+id),s=await tx.get(ref),v=s.data().votes||{},mine=v[me.id]||[],i=+el.dataset.i;tx.update(ref,{votes:{...v,[me.id]:mine.includes(i)?mine.filter(x=>x!==i):[...mine,i]}})})},
 comments:(el,id)=>{expanded.has(id)?expanded.delete(id):expanded.add(id);render()},comment:(el,id)=>comment(id),
-zoom:(el,id)=>sheet(t('photo'),image(images(findPost(id))[+el.dataset.i])),
+zoom:(el,id)=>photoView(id,+el.dataset.i),
 profile:(el,id)=>memberProfile(id),editProfile,saveProfile,
 removeAvatar:()=>{profileImage='';$('#avatarPreview').innerHTML=''},
 answer:async()=>{const text=$('#dailyAnswer').value.trim();if(!text)return;await db.doc('daily/'+dayKey()+'/answers/'+me.id).set({text,ts:ts()});toast(t('saved'))},
@@ -688,7 +698,7 @@ document.addEventListener('change',async e=>{
  if(el.id==='storyPhoto'){draftImages=[await shrink(el.files[0])];$('#storyPreview').innerHTML=image(draftImages[0])}
  if(el.id==='chatPhoto')await sendMessage(await shrink(el.files[0]));
  el.value='';
- }catch(err){fail(err)}finally{el.disabled=false;const action={avatarPhoto:'saveProfile',postPhotos:'publish',storyPhoto:'publishStory'}[el.id];if(action&&el.isConnected){const save=$('.sheet [data-a="'+action+'"]');if(save){save.disabled=false;save.removeAttribute('aria-busy')}}}
+ }catch(err){fail(err)}finally{el.disabled=false;const action={avatarPhoto:'saveProfile',postPhotos:'publish',storyPhoto:'publishStory'}[el.id];if(el.id==='postPhotos'&&el.isConnected)el.disabled=draftImages.length>=3;if(action&&el.isConnected){const save=$('.sheet [data-a="'+action+'"]');if(save){save.disabled=action==='publish'&&!!$('#galleryComposer')&&!draftImages.length;save.removeAttribute('aria-busy')}}}
 });
 addEventListener('online',()=>{scheduleRender();if(started)listenStories()});addEventListener('offline',scheduleRender);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&started){listenStories();listenDaily();scheduleRender()}});
