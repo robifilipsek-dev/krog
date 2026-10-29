@@ -101,6 +101,7 @@ nav button{min-width:0}nav button b{padding:3px 12px;max-width:100%}.row>input{m
 .groupbtn{min-width:0;max-width:46vw;flex:0 1 auto;font-size:14px;font-weight:600;display:flex;align-items:center;gap:4px;white-space:nowrap}
 .groupbtn #groupName{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .story.addstory{display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;width:auto;height:auto;min-height:42px;align-self:center;padding:8px 16px;border-radius:22px;font-size:14px;font-weight:600;color:var(--ac)}
+[hidden]{display:none!important}
 </style></head><body>
 <div id="app"></div><div id="toast" role="status" aria-live="polite"></div><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -198,6 +199,8 @@ const ICON={
  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
  install:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>'
 };
+const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+function updateInstall(){const b=$('#installBtn');if(b)b.hidden=!ip||isStandalone()}
 function toast(m){$('#toast').textContent=m;$('#toast').style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').style.opacity=0,3800)}
 function fail(e){console.warn(e?.step,e?.code||e?.message||e);const m=e?.message?.startsWith('KROG:')?t(e.message.slice(5)):e?.code==='permission-denied'?t('denied'):e?.code?.startsWith('auth/')?t('autherror'):t('error');toast(m+(e?.step?' ['+e.step+']':''))}
 function checkOnline(){if(!navigator.onLine)throw Error('KROG:offline')}
@@ -318,7 +321,7 @@ async function onAuth(u){
  },fail);
 }
 function shell(){
- $('#app').innerHTML='<header><i></i>Krog<span style="flex:1"></span>'+btn('groups','<span id="groupName"></span><span aria-hidden="true">▾</span>','aria-label="'+t('groups')+'"','chip groupbtn')+btn('notifications',ICON.bell+'<span id="bellCount" class="badge" hidden></span>','aria-label="'+t('bell')+'"','iconbtn')+btn('install',ICON.install,'aria-label="'+t('inst')+'"','iconbtn')+'</header><div class="status" id="status" role="status"></div><main id="main"></main><div id="cb"></div><nav>'+[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,e])=>btn('tab','<b>'+e+'</b>'+t(k)+'<i id="badge_'+k+'" hidden></i>','data-k="'+k+'"','')).join('')+'</nav>'+btn('new','＋','aria-label="'+t('post')+'" id="fab"','fab');render();
+ $('#app').innerHTML='<header><i></i>Krog<span style="flex:1"></span>'+btn('groups','<span id="groupName"></span><span aria-hidden="true">▾</span>','aria-label="'+t('groups')+'"','chip groupbtn')+btn('notifications',ICON.bell+'<span id="bellCount" class="badge" hidden></span>','aria-label="'+t('bell')+'"','iconbtn')+btn('install',ICON.install,'id="installBtn" hidden aria-label="'+t('inst')+'"','iconbtn')+'</header><div class="status" id="status" role="status"></div><main id="main"></main><div id="cb"></div><nav>'+[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,e])=>btn('tab','<b>'+e+'</b>'+t(k)+'<i id="badge_'+k+'" hidden></i>','data-k="'+k+'"','')).join('')+'</nav>'+btn('new','＋','aria-label="'+t('post')+'" id="fab"','fab');render();
 }
 function stream(query,assign){unsubs.push(query.onSnapshot(s=>{assign(s);scheduleRender()},fail))}
 function docs(s){return s.docs.map(d=>({...d.data(),id:d.id}))}
@@ -409,7 +412,7 @@ function chatHTML(){
 function render(){
  if(!started||!me||!$('#main'))return;
  const m=$('#main'),top=m.scrollTop,nearBottom=m.scrollHeight-m.clientHeight-top<100,oldTab=render.tab;
- $('#status').textContent=navigator.onLine?'':t('offline');if($('#groupName'))$('#groupName').textContent=state?.name||'';document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===tab));$('#fab').hidden=!['home','ev','gal'].includes(tab);
+ $('#status').textContent=navigator.onLine?'':t('offline');if($('#groupName'))$('#groupName').textContent=state?.name||'';updateInstall();document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===tab));$('#fab').hidden=!['home','ev','gal'].includes(tab);
  let h='';
  if(tab==='home'){
  const filtered=[...new Map([...pinnedPosts,...posts].map(p=>[p.id,p])).values()].filter(p=>[p.text,p.title,p.q,p.name].join(' ').toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a,b)=>Number(!!b.pinned)-Number(!!a.pinned)||b.ts-a.ts);
@@ -604,7 +607,7 @@ leaveGroup:async()=>{
  if(isAdmin()){toast(t('adminLeave'));return}if(!confirm(t('confirmLeave')))return;checkOnline();
  const g=gid,b=db.batch();b.update(db.doc('groups/'+g),{activeIds:F.arrayRemove(me.id)});b.delete(db.doc('groups/'+g+'/members/'+me.id));b.update(db.doc('users/'+me.id),{gids:F.arrayRemove(g)});await b.commit();
 },
-install:async()=>{if(ip){await ip.prompt();ip=null}else sheet(t('inst'),'<p>'+t('ih')+'</p>')}
+install:async()=>{if(!ip)return;const e=ip;ip=null;updateInstall();await e.prompt();try{await e.userChoice}catch{}}
 };
 document.addEventListener('click',async e=>{
  const el=e.target.closest('[data-a]');if(!el||el.disabled)return;const fn=A[el.dataset.a];if(!fn)return;const lock=el.dataset.a+':'+(el.dataset.id||'');if(pendingActions.has(lock))return;pendingActions.add(lock);
@@ -635,7 +638,7 @@ document.addEventListener('change',async e=>{
 addEventListener('online',()=>{scheduleRender();if(started)listenStories()});addEventListener('offline',scheduleRender);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&started){listenStories();listenDaily();scheduleRender()}});
 setInterval(()=>{if(started&&!document.hidden){stories=stories.filter(s=>s.expiresAt?.toMillis()>ts());listenDaily();if(ts()-storyFloor>300000)listenStories();scheduleRender()}},30000);
-addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e});
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;updateInstall()});addEventListener('appinstalled',()=>{ip=null;updateInstall()});
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 try{firebase.initializeApp(FB);auth=firebase.auth();raw=firebase.firestore();db=scopedDb(raw);F=firebase.firestore.FieldValue;auth.onAuthStateChanged(onAuth);auth.getRedirectResult().catch(fail)}catch(e){$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('error')+'</p>'+btn('reload',t('retry'))+'</div>';A.reload=()=>location.reload()}
 </script></body></html>
