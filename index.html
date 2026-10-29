@@ -165,6 +165,7 @@ replyQuote:'Citirano sporočilo|Quoted message',range:'Vnesi veljaven datum ali 
 codeInvalid:'Koda ni veljavna. Nadaljuj brez kode za ročno odobritev.|Invalid code. Continue without a code for manual approval.',
 migrationRequired:'Obstoječi administrator mora najprej nadgraditi članstvo.|The existing administrator must upgrade membership first.',
 limit:'Dosežena je omejitev tega vnosa.|This item has reached its limit.',
+skipped:'Preskočenih zapisov: |Skipped records: ',
 groups:'Skupine|Groups',group:'Skupina|Group',newGroup:'Nova skupina|New group',joinBtn:'Pridruži se|Join',groupName:'Ime skupine|Group name',
 createGroup:'Ustvari skupino|Create group',codeLabel:'Vabilna koda|Invite code',renameGroup:'Preimenuj skupino|Rename group',
 joinGroup:'Pridruži se s kodo|Join with a code',
@@ -198,7 +199,7 @@ const ICON={
  install:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>'
 };
 function toast(m){$('#toast').textContent=m;$('#toast').style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').style.opacity=0,3800)}
-function fail(e){console.warn(e?.code||e?.message||e);toast(e?.message?.startsWith('KROG:')?t(e.message.slice(5)):e?.code==='permission-denied'?t('denied'):e?.code?.startsWith('auth/')?t('autherror'):t('error'))}
+function fail(e){console.warn(e?.step,e?.code||e?.message||e);const m=e?.message?.startsWith('KROG:')?t(e.message.slice(5)):e?.code==='permission-denied'?t('denied'):e?.code?.startsWith('auth/')?t('autherror'):t('error');toast(m+(e?.step?' ['+e.step+']':''))}
 function checkOnline(){if(!navigator.onLine)throw Error('KROG:offline')}
 function limitDoc(d,max=800000){if(new TextEncoder().encode(JSON.stringify(d)).length>max)throw Error('KROG:big')}
 function avatar(u={}){const c=COLORS.includes(u.color)?u.color:'#2f5bff';return '<div class="av" style="background:'+c+'">'+(imageOK(u.avatar)?'<img alt="" src="'+u.avatar+'">':esc((u.name||'?')[0].toUpperCase()))+'</div>'}
@@ -490,33 +491,45 @@ async function removeMember(id){
  const g=gid;
  await db.runTransaction(async tx=>{const sr=db.doc('groups/'+g),s=await tx.get(sr);tx.update(sr,{activeIds:s.data().activeIds.filter(x=>x!==id)});tx.delete(db.doc('groups/'+g+'/members/'+id))});
 }
-async function copyLegacy(src,dst,each){
- let cursor=null,b=db.batch(),n=0,bytes=0;
- const flush=async()=>{if(n){await b.commit();b=db.batch();n=0;bytes=0}};
+async function copyLegacy(src,dst,each,skipped){
+ let cursor=null,pend=[],bytes=0;
+ const flush=async()=>{
+  if(!pend.length)return;const items=pend;pend=[];bytes=0;
+  try{const b=db.batch();items.forEach(([ref,data])=>b.set(ref,data));await b.commit()}
+  catch(e){if(e.code!=='permission-denied')throw e;
+   for(const [ref,data] of items){try{await ref.set(data)}catch(err){if(err.code!=='permission-denied')throw err;skipped?.push(ref.path)}}}
+ };
  for(;;){
   let q=raw.collection(src).orderBy(firebase.firestore.FieldPath.documentId());if(cursor)q=q.startAfter(cursor);
   const s=await q.limit(50).get();
-  for(const d of s.docs){const data=d.data(),size=JSON.stringify(data).length;if(n&&(n>=400||bytes+size>5e6))await flush();b.set(db.doc(dst+'/'+d.id),data);n++;bytes+=size;if(each)await each(d)}
-  await flush();if(s.size<50)break;cursor=s.docs.at(-1);
+  for(const d of s.docs){const data=d.data(),size=JSON.stringify(data).length;if(pend.length&&(pend.length>=400||bytes+size>5e6))await flush();pend.push([db.doc(dst+'/'+d.id),data]);bytes+=size}
+  await flush();
+  if(each)for(const d of s.docs)await each(d);
+  if(s.size<50)break;cursor=s.docs.at(-1);
  }
 }
 // One-time move of the pre-groups circle (top-level collections) into groups/{id}. Old data is left untouched.
 async function migrateLegacy(){
- checkOnline();const ss=await raw.doc('config/state').get();if(!ss.exists||ss.data().adminUid!==me.id)throw Error('KROG:denied');
- const ls=ss.data(),g='krog-'+me.id.slice(0,10).toLowerCase(),oldCode=(await raw.doc('config/app').get()).data()?.code||randomCode();
+ checkOnline();const step=async(n,f)=>{try{return await f()}catch(e){e.step=n;throw e}},skipped=[];
+ const ls=await step('state',async()=>{const ss=await raw.doc('config/state').get();if(!ss.exists||ss.data().adminUid!==me.id)throw Error('KROG:denied');return ss.data()});
+ const g='krog-'+me.id.slice(0,10).toLowerCase(),base='groups/'+g+'/';
+ const oldCode=await step('code',async()=>(await raw.doc('config/app').get()).data()?.code||randomCode());
  toast(t('archiveBusy'));
- const profiles=await Promise.all(ls.activeIds.map(id=>raw.doc('users/'+id).get())),b=db.batch();
- b.set(db.doc('groups/'+g),{name:'Krog',adminUid:me.id,activeIds:ls.activeIds,ts:ts()});
- b.set(db.doc('groups/'+g+'/private/app'),{code:oldCode});
- b.set(db.doc('invites/'+oldCode),{gid:g,name:'Krog',enabled:true});
- profiles.forEach(p=>{if(p.exists)b.set(db.doc('groups/'+g+'/members/'+p.id),memberData(p.data()))});
- await b.commit();
- const base='groups/'+g+'/';
- await copyLegacy('posts',base+'posts',async d=>{if(d.data().type==='anon')await copyLegacy('posts/'+d.id+'/results',base+'posts/'+d.id+'/results')});
- await copyLegacy('expenses',base+'expenses');
- await copyLegacy('lists',base+'lists',d=>copyLegacy('lists/'+d.id+'/items',base+'lists/'+d.id+'/items'));
- await copyLegacy('rooms/all/msgs',base+'rooms/all/msgs');
- const b2=db.batch();b2.update(raw.doc('config/state'),{migratedTo:g});b2.update(db.doc('users/'+me.id),{gids:F.arrayUnion(g)});await b2.commit();
+ const profiles=await step('users',()=>Promise.all(ls.activeIds.map(id=>raw.doc('users/'+id).get())));
+ await step('group',async()=>{
+  const b=db.batch();
+  b.set(db.doc('groups/'+g),{name:'Krog',adminUid:me.id,activeIds:ls.activeIds,ts:ts()});
+  b.set(db.doc(base+'private/app'),{code:oldCode});
+  b.set(db.doc('invites/'+oldCode),{gid:g,name:'Krog',enabled:true});
+  profiles.forEach(p=>{if(p.exists)b.set(db.doc(base+'members/'+p.id),memberData(p.data()))});
+  await b.commit();
+ });
+ await step('posts',()=>copyLegacy('posts',base+'posts',async d=>{if(d.data().type==='anon')await copyLegacy('posts/'+d.id+'/results',base+'posts/'+d.id+'/results',null,skipped)},skipped));
+ await step('expenses',()=>copyLegacy('expenses',base+'expenses',null,skipped));
+ await step('lists',()=>copyLegacy('lists',base+'lists',d=>copyLegacy('lists/'+d.id+'/items',base+'lists/'+d.id+'/items',null,skipped),skipped));
+ await step('chat',()=>copyLegacy('rooms/all/msgs',base+'rooms/all/msgs',null,skipped));
+ await step('finish',async()=>{const b2=db.batch();b2.update(raw.doc('config/state'),{migratedTo:g});b2.update(db.doc('users/'+me.id),{gids:F.arrayUnion(g)});await b2.commit()});
+ if(skipped.length){console.warn('skipped',skipped);toast(t('skipped')+skipped.length)}
  return g;
 }
 function memberProfile(id){
