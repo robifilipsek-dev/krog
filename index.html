@@ -639,6 +639,7 @@ addEventListener('online',()=>{scheduleRender();if(started)listenStories()});add
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&started){listenStories();listenDaily();scheduleRender()}});
 setInterval(()=>{if(started&&!document.hidden){stories=stories.filter(s=>s.expiresAt?.toMillis()>ts());listenDaily();if(ts()-storyFloor>300000)listenStories();scheduleRender()}},30000);
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;updateInstall()});addEventListener('appinstalled',()=>{ip=null;updateInstall()});
+addEventListener('error',e=>{console.error(e.error||e.message);toast('⚠ '+(e.message||'error').slice(0,120))});addEventListener('unhandledrejection',e=>{console.error(e.reason);if(!e.reason?.code&&!String(e.reason?.message||'').startsWith('KROG:'))toast('⚠ '+String(e.reason?.message||e.reason).slice(0,120))});
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-try{firebase.initializeApp(FB);auth=firebase.auth();raw=firebase.firestore();db=scopedDb(raw);F=firebase.firestore.FieldValue;auth.onAuthStateChanged(onAuth);auth.getRedirectResult().catch(fail)}catch(e){$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('error')+'</p>'+btn('reload',t('retry'))+'</div>';A.reload=()=>location.reload()}
+try{firebase.initializeApp(FB);auth=firebase.auth();raw=firebase.firestore();db=scopedDb(raw);F=firebase.firestore.FieldValue;auth.onAuthStateChanged(onAuth);auth.getRedirectResult().catch(fail)}catch(e){console.error(e);$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('error')+'</p><p class="mu">'+esc((e?.name||'Error')+': '+(e?.message||e))+'</p>'+btn('reload',t('retry'))+'</div>';A.reload=()=>location.reload()}
 </script></body></html>
