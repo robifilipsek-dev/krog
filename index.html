@@ -168,6 +168,9 @@ button.what{width:100%;text-align:left;margin:10px 0;min-height:64px}.what span{
 #chatText{border-radius:22px}::selection{background:var(--y);color:#17232b}
 .strip{scrollbar-width:none}.strip::-webkit-scrollbar{display:none}.section-title{letter-spacing:-.03em}
 .sheet details[open] summary{margin-bottom:4px}
+.rsum{background:none!important;border:0!important;padding:6px 2px!important;min-height:32px;color:var(--mu);font-size:13px;display:flex;align-items:center;gap:6px;margin-top:8px;text-align:left}
+.rem{letter-spacing:-3px;font-size:16px}.msg .rsum{margin-top:2px}.msg.me .rsum{align-self:flex-end}
+.rchips{flex-wrap:wrap}.rrow{padding:10px 0;border-bottom:1px solid var(--bd)}.rbig{font-size:26px}
 </style></head><body>
 <div id="app"></div><div id="toast" role="status" aria-live="polite"></div><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -456,7 +459,7 @@ function updateBadges(){
 function notifications(){return activities.filter(a=>a.actor!==me.id&&(a.kind==='post'||a.kind==='event'||a.targetUid===me.id||(a.mentions||[]).includes(me.id)))}
 function mentions(text){return activeUsers().filter(u=>text.toLocaleLowerCase().includes('@'+u.name.toLocaleLowerCase())).map(u=>u.id)}
 function activity(batch,kind,ref,data,targetUid=null){
- const a={actor:me.id,kind,ref,ts:ts(),text:String(data.text||data.title||data.q||'').slice(0,160),mentions:mentions(data.text||'')};if(targetUid)a.targetUid=targetUid;
+ const a={actor:me.id,kind,ref,ts:ts(),text:String(data.text||data.title||data.q||'').slice(0,160),mentions:kind==='reaction'?[]:mentions(data.text||'')};if(targetUid)a.targetUid=targetUid;
  batch.set(db.collection('activity').doc(),a);
 }
 function dailyQuestion(){const d=cfg.daily;if(d?.day===dayKey()&&d.sl&&d.en)return L==='sl'?d.sl:d.en;const n=Math.floor(Date.UTC(new Date().getFullYear(),new Date().getMonth(),new Date().getDate())/86400000);return t('daily'+(n%7+1))}
@@ -493,7 +496,7 @@ function card(p){
  }
  const pics=images(p);body+='<div class="'+(pics.length>1?'grid':'')+'">'+pics.map((v,i)=>'<button class="chip" data-a="zoom" '+idattr(id)+' data-i="'+i+'">'+image(v)+'</button>').join('')+'</div>';
  const reactions=p.reactions||{},lc=p.likes||[];
- return '<article class="card" id="post_'+esc(id)+'"><div class="row">'+avatar(u)+'<div style="flex:1">'+profileLink(u)+(p.uid===state?.adminUid?'<span class="badge">'+ux('Skrbnik','Admin')+'</span>':'')+'<div class="mu">'+ago(p.ts)+(p.pinned?' · 📌 '+t('pinned'):'')+'</div></div>'+((own||isAdmin())?btn('postMenu','⋯',idattr(id)+' aria-label="'+t('edit')+'"'):'')+'</div>'+body+'<div class="act">'+E.map(e=>btn('react',e+' '+(Object.values(reactions).filter(x=>x===e).length+(e==='❤️'?lc.filter(uid=>!Object.hasOwn(reactions,uid)).length:0)||''),idattr(id)+' data-e="'+e+'"',(reactions[me.id]===e||(!reactions[me.id]&&e==='❤️'&&lc.includes(me.id)))?'chip on':'chip')).join('')+btn('comments','💬 '+comments.length,idattr(id))+btn('save',savedIds().includes(id)?'🔖 '+ux('Shranjeno','Saved'):'🔖',idattr(id)+' aria-label="'+ux('Shrani objavo','Save post')+'"',savedIds().includes(id)?'chip on':'chip')+'</div>'+(expanded.has(id)?comments.map(c=>'<p class="cm"><b>'+esc(c.name)+'</b><span>'+esc(c.text)+'</span><small class="mu">'+ago(c.ts)+'</small>'+((c.uid===me.id||isAdmin())?btn('delComment','×',idattr(id)+' data-ts="'+c.ts+'" aria-label="'+t('remove')+'"','chip tiny'):'')+'</p>').join('')+'<div class="row"><input id="comment_'+id+'" maxlength="1000" placeholder="'+t('cm')+'" aria-label="'+t('cm')+'">'+btn('comment','➤',idattr(id))+'</div>':'')+'</article>';
+ return '<article class="card" id="post_'+esc(id)+'"><div class="row">'+avatar(u)+'<div style="flex:1">'+profileLink(u)+(p.uid===state?.adminUid?'<span class="badge">'+ux('Skrbnik','Admin')+'</span>':'')+'<div class="mu">'+ago(p.ts)+(p.pinned?' · 📌 '+t('pinned'):'')+'</div></div>'+((own||isAdmin())?btn('postMenu','⋯',idattr(id)+' aria-label="'+t('edit')+'"'):'')+'</div>'+body+reactSummary(reactList(p,true),'p',id)+'<div class="act">'+E.map(e=>btn('react',e+' '+(Object.values(reactions).filter(x=>x===e).length+(e==='❤️'?lc.filter(uid=>!Object.hasOwn(reactions,uid)).length:0)||''),idattr(id)+' data-e="'+e+'"',(reactions[me.id]===e||(!reactions[me.id]&&e==='❤️'&&lc.includes(me.id)))?'chip on':'chip')).join('')+btn('comments','💬 '+comments.length,idattr(id))+btn('save',savedIds().includes(id)?'🔖 '+ux('Shranjeno','Saved'):'🔖',idattr(id)+' aria-label="'+ux('Shrani objavo','Save post')+'"',savedIds().includes(id)?'chip on':'chip')+'</div>'+(expanded.has(id)?comments.map(c=>'<p class="cm"><b>'+esc(c.name)+'</b><span>'+esc(c.text)+'</span><small class="mu">'+ago(c.ts)+'</small>'+((c.uid===me.id||isAdmin())?btn('delComment','×',idattr(id)+' data-ts="'+c.ts+'" aria-label="'+t('remove')+'"','chip tiny'):'')+'</p>').join('')+'<div class="row"><input id="comment_'+id+'" maxlength="1000" placeholder="'+t('cm')+'" aria-label="'+t('cm')+'">'+btn('comment','➤',idattr(id))+'</div>':'')+'</article>';
 }
 function ux(sl,en){return L==='sl'?sl:en}
 function toolsHTML(){return '<div class="strip" aria-label="'+t('tools')+'">'+btn('expenses','€ '+t('expenses'))+btn('lists','☑ '+t('lists'))+(tab==='home'?btn('savedOnly','🔖 '+ux('Shranjeno','Saved'),'',onlySaved?'chip on':'chip'):'')+'</div>'}
@@ -505,7 +508,7 @@ const SK='<div class="card sk" aria-hidden="true"></div>'.repeat(3);function mor
 function emptyState(icon,title,description){return '<div class="empty-state"><span>'+icon+'</span><b>'+esc(title)+'</b><p>'+esc(description)+'</p></div>'}
 function setting(action,title,description){return btn(action,'<span><b>'+esc(title)+'</b><small>'+esc(description)+'</small></span><span aria-hidden="true">›</span>','','settings-row')}
 function chatHTML(){
- return pageHeading(t('chat'),ux('Izberi skupni pogovor ali posameznega člana.','Choose the group conversation or a member.'))+'<div class="strip">'+btn('room',t('all'),'data-room="all"',room==='all'?'chip on':'chip')+activeUsers().filter(u=>u.id!==me.id).map(u=>{const id=[u.id,me.id].sort().join('_');return btn('room',esc(u.name),'data-room="'+esc(id)+'" '+idattr(u.id),room===id?'chip on':'chip')}).join('')+'</div><div class="chat-context"><b>'+ (room==='all'?ux('Skupni klepet','Group chat'):esc(nameOf(room.split('_').find(id=>id!==me.id))))+'</b><div class="mu">'+(room==='all'?ux('Sporočila vidijo člani skupine.','Messages are visible to group members.'):ux('Zasebni pogovor med vama.','A private conversation between you two.'))+'</div></div>'+(!messages.length?emptyState('💬',ux('Začni pogovor','Start a conversation'),ux('Pošlji sporočilo ali fotografijo spodaj.','Send a message or a photo below.')):'')+messages.map(m=>'<div class="msg '+(m.uid===me.id?'me':'')+'"><span class="mu">'+esc(nameOf(m.uid))+' · '+ago(m.ts)+'</span><p>'+(m.rp?'<span class="reply-quote"><b>'+t('replyQuote')+'</b>'+esc(m.rp)+'</span>':'')+image(m.img)+esc(m.text)+'</p><div class="act">'+btn('reply','↩ '+t('reply'),idattr(m.id)+' aria-label="'+t('reply')+'"')+E.slice(0,3).map(e=>btn('msgReact',e+' '+(Object.values(m.re||{}).filter(x=>x===e).length||''),idattr(m.id)+' data-e="'+e+'"',m.re?.[me.id]===e?'chip on':'chip')).join('')+'</div></div>').join('');
+ return pageHeading(t('chat'),ux('Izberi skupni pogovor ali posameznega člana.','Choose the group conversation or a member.'))+'<div class="strip">'+btn('room',t('all'),'data-room="all"',room==='all'?'chip on':'chip')+activeUsers().filter(u=>u.id!==me.id).map(u=>{const id=[u.id,me.id].sort().join('_');return btn('room',esc(u.name),'data-room="'+esc(id)+'" '+idattr(u.id),room===id?'chip on':'chip')}).join('')+'</div><div class="chat-context"><b>'+ (room==='all'?ux('Skupni klepet','Group chat'):esc(nameOf(room.split('_').find(id=>id!==me.id))))+'</b><div class="mu">'+(room==='all'?ux('Sporočila vidijo člani skupine.','Messages are visible to group members.'):ux('Zasebni pogovor med vama.','A private conversation between you two.'))+'</div></div>'+(!messages.length?emptyState('💬',ux('Začni pogovor','Start a conversation'),ux('Pošlji sporočilo ali fotografijo spodaj.','Send a message or a photo below.')):'')+messages.map(m=>'<div class="msg '+(m.uid===me.id?'me':'')+'"><span class="mu">'+esc(nameOf(m.uid))+' · '+ago(m.ts)+'</span><p>'+(m.rp?'<span class="reply-quote"><b>'+t('replyQuote')+'</b>'+esc(m.rp)+'</span>':'')+image(m.img)+esc(m.text)+'</p>'+reactSummary(reactList(m,false),'m',m.id)+'<div class="act">'+btn('reply','↩ '+t('reply'),idattr(m.id)+' aria-label="'+t('reply')+'"')+E.slice(0,3).map(e=>btn('msgReact',e+' '+(Object.values(m.re||{}).filter(x=>x===e).length||''),idattr(m.id)+' data-e="'+e+'"',m.re?.[me.id]===e?'chip on':'chip')).join('')+'</div></div>').join('');
 }
 function render(){
  if(!started||!me||!$('#main'))return;
@@ -589,7 +592,7 @@ async function updateOwnMap(id,field,value){
  checkOnline();await db.runTransaction(async tx=>{const ref=db.doc('posts/'+id),s=await tx.get(ref);if(!s.exists)throw Error('KROG:invalid');const d=s.data();tx.update(ref,{[field]:{...(d[field]||{}),[me.id]:value}})});
 }
 async function react(id,emoji){
- checkOnline();await db.runTransaction(async tx=>{const ref=db.doc('posts/'+id),s=await tx.get(ref),d=s.data(),map={...(d.reactions||{})};if(map[me.id]===emoji||(!map[me.id]&&emoji==='❤️'&&(d.likes||[]).includes(me.id)))delete map[me.id];else map[me.id]=emoji;tx.update(ref,{reactions:map,likes:(d.likes||[]).filter(id=>id!==me.id)});if(map[me.id])activity(tx,'reaction',id,d,d.uid)});
+ checkOnline();await db.runTransaction(async tx=>{const ref=db.doc('posts/'+id),s=await tx.get(ref),d=s.data(),map={...(d.reactions||{})};if(map[me.id]===emoji||(!map[me.id]&&emoji==='❤️'&&(d.likes||[]).includes(me.id)))delete map[me.id];else map[me.id]=emoji;tx.update(ref,{reactions:map,likes:(d.likes||[]).filter(id=>id!==me.id)});if(map[me.id]&&d.uid!==me.id)activity(tx,'reaction',id,{text:map[me.id]+' '+String(d.text||d.title||d.q||'').slice(0,120)},d.uid)});
 }
 async function comment(id){
  checkOnline();const input=$('#comment_'+id),text=input.value.trim();if(!text)return;
@@ -703,6 +706,13 @@ function starterHTML(){
  const n=it.filter(x=>x[0]).length;if(n===it.length)return'';
  return '<section class="card"><div class="row"><h3 style="flex:1">'+ux('Začni v Krogu','Get started')+' · '+n+'/'+it.length+'</h3>'+btn('starterHide','✕','aria-label="'+t('close')+'"','chip tiny')+'</div><div class="prog"><u style="width:'+Math.round(n/it.length*100)+'%"></u></div>'+it.map(([ok,l,a])=>'<div class="todo '+(ok?'ok':'')+'"><i>'+(ok?'✓':'')+'</i><span>'+l+'</span>'+(!ok&&a?btn(a,a==='copyCode'?t('copy'):ux('Odpri','Open')):'')+'</div>').join('')+btn('tourStart','🧭 '+ux('Vodič po aplikaciji','App tour'),'','cta soc')+'</section>';
 }
+function reactList(x,legacy){const r={...(x.reactions||x.re||{})};if(legacy)(x.likes||[]).forEach(u=>{if(!(u in r))r[u]='❤️'});return Object.entries(r)}
+function reactSummary(list,kind,id){
+ if(!list.length)return'';const you=ux('Ti','You'),cnt={};list.forEach(([,e])=>cnt[e]=(cnt[e]||0)+1);
+ const top=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,3),names=list.map(([u])=>u===me.id?you:nameOf(u)).sort((a,b)=>(b===you)-(a===you)),
+ shown=names.slice(0,2).map(esc).join(', ')+(names.length>2?ux(' in še '+(names.length-2),' and '+(names.length-2)+' more'):'');
+ return btn('whoReacted','<span class="rem">'+top.join('')+'</span> '+shown,idattr(id)+' data-k="'+kind+'" aria-label="'+ux('Kdo se je odzval','Who reacted')+'"','rsum');
+}
 const pendingActions=new Set();
 const A={
 close:closeSheet,toli:()=>authUI('li'),tosu:()=>authUI('su'),
@@ -711,7 +721,10 @@ signup:()=>{const name=$('#an').value,code=$('#ac').value,email=$('#ae').value.t
 finish:()=>{const name=$('#an').value,code=$('#ac').value;return runJoining(async()=>{await createProfile(name);return code.trim()?joinWithCode(code):null})},
 google:googleLogin,
 reset:async()=>{const email=$('#ae').value.trim();if(!email)throw Error('KROG:invalid');await auth.sendPasswordResetEmail(email);toast(t('resetSent'))},
-logout:()=>auth.signOut(),tourStart:()=>{closeSheet();tourOn=true;tourI=0;tourShow()},tourNext:()=>{tourI++;tourShow()},tourBack:()=>{tourI=Math.max(0,tourI-1);tourShow()},tourEnd,
+logout:()=>auth.signOut(),whoReacted:(el,id)=>{const k=el.dataset.k,x=k==='m'?messages.find(m=>m.id===id):findPost(id);if(!x)return;
+ const list=reactList(x,k==='p').sort((a,b)=>E.indexOf(a[1])-E.indexOf(b[1])),cnt={};list.forEach(([,e])=>cnt[e]=(cnt[e]||0)+1);
+ sheet(ux('Odzivi','Reactions')+' · '+list.length,'<div class="row rchips">'+E.filter(e=>cnt[e]).map(e=>'<span class="chip on">'+e+' '+cnt[e]+'</span>').join('')+'</div>'+list.map(([u,e])=>'<div class="row rrow">'+avatar(users[u]||{name:'?'})+'<b style="flex:1">'+esc(u===me.id?ux('Ti','You'):nameOf(u))+'</b><span class="rbig">'+e+'</span></div>').join(''))},
+tourStart:()=>{closeSheet();tourOn=true;tourI=0;tourShow()},tourNext:()=>{tourI++;tourShow()},tourBack:()=>{tourI=Math.max(0,tourI-1);tourShow()},tourEnd,
 starterHide:()=>{store.set(key('starter'),'1');render()},
 help:()=>{const q=[
 [ux('Kako objavim?','How do I post?'),ux('Na domovski strani tapni kartico »Kaj je novega« ali gumb Objavi. Dodaš lahko besedilo, do 3 fotografije, anketo ali dogodek.','On Home tap the “What’s new” card or the Post button. Add text, up to 3 photos, a poll or an event.')],
