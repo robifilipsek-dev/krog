@@ -66,143 +66,477 @@ button:active,.bar:active{transform:scale(.96)}
 .msg:not(.me) p{border-bottom-left-radius:6px}.msg.me p{border-bottom-right-radius:6px}
 #ci{border-radius:22px}
 header{padding-top:16px;font-size:26px}
+
+/* Mobile viewport, keyboard and accessible controls */
+html,body{overflow:hidden;overscroll-behavior:none;height:100%;padding:0}
+#app{height:100vh;height:var(--vh,100dvh);padding-top:env(safe-area-inset-top);position:relative;min-height:0}
+main{min-height:0;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;overflow-anchor:auto;padding-bottom:85px}
+header{flex:none;padding:10px 14px;font-size:24px}nav,#cb{flex:none}
+input,textarea,select{font-size:16px}button{min-height:42px}button:disabled{opacity:.5;cursor:wait}
+select{background:var(--in);color:var(--tx);border:0;border-radius:12px;padding:10px;width:100%}
+label.field{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--mu)}
+.auth{overflow:auto}.av{overflow:hidden}.av img{width:100%;height:100%;object-fit:cover}
+.sheet{height:var(--vh,100dvh);bottom:auto}.sheet>div{padding-bottom:calc(16px + env(safe-area-inset-bottom));overscroll-behavior:contain}
+.sheet h2{font-size:20px}.sheet .close{align-self:flex-end}.fab{position:absolute;bottom:calc(80px + env(safe-area-inset-bottom));right:16px}
+.notice{background:var(--y);color:#17232b;border-radius:16px;padding:12px;margin:10px 0}
+.line{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:10px}
+.strip{display:flex;gap:8px;overflow:auto;padding:6px 0}.strip>*{flex:none}.story{border:2px solid var(--ac);border-radius:18px;background:var(--card);padding:8px;width:104px;text-align:left;font-size:12px}
+.story img{width:100%;height:70px;object-fit:cover;border-radius:10px}.story span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.grid .ph{margin:0;height:160px;object-fit:cover}
+.checks{display:flex;gap:8px;flex-wrap:wrap}.checks label{display:flex;align-items:center;gap:5px}.checks input{width:auto}
+.listitem{display:flex;align-items:center;gap:8px;margin-top:10px}.listitem input[type=checkbox]{width:24px;height:24px}.listitem .done{text-decoration:line-through;color:var(--mu)}
+.listitem select{width:120px;font-size:14px}.listitem span{flex:1;overflow-wrap:anywhere}
+.badge{background:var(--y);color:#17232b;border-radius:10px;padding:1px 5px;font-size:11px}
+.status{font-size:12px;padding:3px 14px;color:var(--mu)}.newdot{border-left:4px solid var(--ac)}
+:focus-visible{outline:3px solid var(--ac);outline-offset:3px}.card .chip{white-space:normal}
+.bar{display:block;width:100%;text-align:left;border:0}.gal button{padding:0;border:0;background:transparent}.gal img{height:100%}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+nav button{min-width:0}nav button b{padding:3px 12px;max-width:100%}.row>input{min-width:0;flex:1}#cb input{min-width:0}
 </style></head><body>
-<div id="app"></div><div id="toast"></div>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<div id="app"></div><div id="toast" role="status" aria-live="polite"></div><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script>
-// ====== 1) VSTAVI SVOJ FIREBASE CONFIG (Project settings > Your apps > Web) ======
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script><script>
+// Krog — buildless, Firebase compat 10.12.2. See NAVODILA.md for schema and migration.
 const FB={apiKey:"AIzaSyCEg7voKWxQJII6HKLI4JQQ24el9zNItxM",authDomain:"krog-d7dd6.firebaseapp.com",projectId:"krog-d7dd6",appId:"1:914190199955:web:c1e0bc925dde53184fb166"};
-// =================================================================================
-let auth,db,F,ok=1;try{firebase.initializeApp(FB);auth=firebase.auth();db=firebase.firestore();F=firebase.firestore.FieldValue}catch(x){ok=0}
-const S={home:'Domov|Home',ev:'Dogodki|Events',chat:'Klepet|Chat',gal:'Galerija|Gallery',me:'Jaz|Me',
-post:'Objava|Post',poll:'Anketa|Poll',event:'Dogodek|Event',txt:'Kaj je novega?|What\'s new?',q:'Vprašanje|Question',opt:'Možnost|Option',
-evt:'Naslov dogodka|Event title',photo:'📷 Fotografija|📷 Photo',send:'Objavi|Post',yes:'Pridem|Going',no:'Ne pridem|Can\'t make it',
-msg:'Sporočilo…|Message…',empty:'Še ni ničesar. Bodi prvi!|Nothing here yet. Be the first!',noev:'Ni dogodkov.|No events.',
+const S={
+home:'Domov|Home',ev:'Dogovori|Together',chat:'Klepet|Chat',gal:'Galerija|Gallery',me:'Jaz|Me',
+post:'Objava|Post',poll:'Anketa|Poll',event:'Dogodek|Event',when:'Termin|Date poll',anon:'Kdo bi …? (anonimno)|Who would …? (anonymous)',
+txt:'Kaj je novega?|What’s new?',q:'Vprašanje|Question',opt:'Možnosti (vsaka v svoji vrstici)|Options (one per line)',evt:'Naslov|Title',
+photo:'Fotografije (največ 3)|Photos (up to 3)',send:'Objavi|Post',yes:'Pridem|Going',maybe:'Morda|Maybe',no:'Ne pridem|Not going',
+msg:'Sporočilo…|Message…',empty:'Tu je prostor za vaš prvi trenutek.|Your first moment belongs here.',noev:'Ni prihajajočih dogodkov.|No upcoming events.',
 login:'Prijava|Log in',signup:'Registracija|Sign up',email:'E-pošta|Email',pw:'Geslo|Password',name:'Ime|Name',
-code:'Vabilna koda (neobvezno)|Invite code (optional)',sub:'Zasebno omrežje za ožje prijatelje|A private network for close friends',
-pend:'Čakaš na odobritev administratorja. Stran se osveži sama.|Waiting for admin approval. This page updates by itself.',
+code:'Vabilna koda (neobvezno)|Invite code (optional)',sub:'Majhen krog. Pravi prijatelji.|Small circle. Real friends.',
+pend:'Prošnja čaka na odobritev administratorja.|Your request is waiting for admin approval.',rejected:'Dostop ni odobren. Obrni se na administratorja.|Access is not approved. Contact the administrator.',
 out:'Odjava|Log out',lang:'Jezik|Language',theme:'Tema|Theme',mem:'Člani|Members',inv:'Vabilna koda|Invite code',
-ok:'Odobri|Approve',rej:'Zavrni|Reject',full:'Krog je poln (20 članov).|The circle is full (20 members).',
-del:'Izbrisati?|Delete?',cm:'Komentiraj…|Comment…',ask:'Prošnje za vstop|Join requests',nc:'Nova koda|New code',
-soon:'Prihaja|Upcoming',inst:'Namesti|Install',ih:'iPhone (Safari): tapni gumb Deli, nato »Dodaj na začetni zaslon«.|iPhone (Safari): tap Share, then “Add to Home Screen”.',ah:'Android (Chrome): meni ⋮ in »Namesti aplikacijo«.|Android (Chrome): menu ⋮ then “Install app”.',cw:'Nadaljuj z|Continue with',or:'ali z e-pošto|or with email',go:'Nadaljuj|Continue',when:'Termin|Date poll',pw:'Dodaj naslov in vsaj 2 termina|Add a title and at least 2 dates',past:'Minilo|Past',hint:'Namesti: v brskalniku izberi »Dodaj na začetni zaslon«.|Install: choose “Add to Home Screen” in your browser.',cp:'Kopirano|Copied',now:'zdaj|now',pq:'Dodaj vprašanje in vsaj 2 možnosti|Add a question and at least 2 options',pe:'Dodaj naslov in datum|Add a title and date'};
-let L=localStorage.l||(navigator.language.startsWith('sl')?'sl':'en'),th=localStorage.th||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
-const t=k=>(S[k]||k).split('|')[L=='sl'?0:1],$=q=>document.querySelector(q),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-document.documentElement.dataset.t=th;
-let me,users={},posts=[],chat=[],cfg={},tab='home',open={},unsubs=[],am='li',room='all',cu=null,rp=null,sel=null,cm={type:'post',img:null};
-const er=x=>toast(x.message);const rnd=()=>Math.random().toString(36).slice(2,8).toUpperCase(),LS=k=>+localStorage['s_'+k]||0;
-const toast=m=>{const e=$('#toast');e.textContent=m;e.style.opacity=1;setTimeout(()=>e.style.opacity=0,2400)};
-const av=u=>`<div class="av" style="background:${u.color||'#2f5bff'}">${esc((u.name||'?')[0].toUpperCase())}</div>`;
-const ago=ts=>{const s=(Date.now()-ts)/1e3;return s<60?t('now'):s<3600?Math.floor(s/60)+' min':s<86400?Math.floor(s/3600)+' h':new Date(ts).toLocaleDateString(L,{day:'numeric',month:'short'})};
-const shrink=f=>new Promise(r=>{const i=new Image;i.onload=()=>{const k=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);r(c.toDataURL('image/jpeg',.6))};i.src=URL.createObjectURL(f)});
-// PWA
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-let ip=null;const sa=()=>matchMedia('(display-mode:standalone)').matches||navigator.standalone;
-addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;render()});
-addEventListener('appinstalled',()=>{ip=null;render()});
-
-function authUI(m){am=m||'li';const su=am=='su';$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><div class="mu" style="margin-bottom:8px">${t('sub')}</div><button class="cta soc" data-a=gg><b style="color:#ea4335">G</b> ${t('cw')} Google</button><div class=mu style="text-align:center">${t('or')}</div>${su?`<input id=n placeholder="${t('name')}">`:''}<input id=e type=email placeholder="${t('email')}"><input id=p type=password placeholder="${t('pw')}">${su?`<input id=c placeholder="${t('code')}">`:''}<button class=cta data-a="${su?'su':'li'}">${t(su?'signup':'login')}</button><button class=chip data-a="${su?'toli':'tosu'}">${t(su?'login':'signup')}</button><button class=chip data-a=lang>🌐 ${L.toUpperCase()}</button></div>`}
-async function join(uid,n,c){const cd=await db.doc('config/app').get(),d={name:n,role:'member',status:'pending',color:'hsl('+Math.floor(Math.random()*360)+' 55% 48%)',ts:Date.now()};
-if(!cd.exists){d.role='admin';d.status='active';await db.doc('users/'+uid).set(d);await db.doc('config/app').set({code:rnd()});return}
-c=(c||'').trim().toUpperCase();if(c&&c==cd.data().code){const k=(await db.collection('users').where('status','==','active').get()).size;if(k<20){d.status='active';d.code=c}else toast(t('full'))}
-await db.doc('users/'+uid).set(d)}
-async function signup(){const n=$('#n').value.trim();if(!n)return toast(t('name'));const cr=await auth.createUserWithEmailAndPassword($('#e').value,$('#p').value);await join(cr.user.uid,n,$('#c').value)}
-const soc=async pv=>{try{await auth.signInWithPopup(pv)}catch(x){if(x.code=='auth/popup-blocked'||x.code=='auth/operation-not-supported-in-this-environment')await auth.signInWithRedirect(pv);else throw x}};
-function finishUI(u){$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><div class=mu>${t('sub')}</div><input id=n value="${esc(u.displayName||'')}" placeholder="${t('name')}"><input id=c placeholder="${t('code')}"><button class=cta data-a=fin>${t('go')}</button><button class=chip data-a=out>${t('out')}</button></div>`}
-
-if(!ok||!FB.apiKey)setup();else auth.onAuthStateChanged(u=>{unsubs.forEach(f=>f());unsubs=[];cu&&cu();cu=null;$('#app').innerHTML='';if(!u){me=null;return authUI(am)}
-unsubs.push(db.doc('users/'+u.uid).onSnapshot(d=>{if(!d.exists){if(u.providerData[0]&&u.providerData[0].providerId!='password')finishUI(u);return}me={...d.data(),id:u.uid};
-if(me.status!='active'){$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><p>${t('pend')}</p><button class=chip data-a=out>${t('out')}</button></div>`;return}
-if(!$('#main')){shell();sub()}render()}))});
-function shell(){$('#app').innerHTML=`<header><i></i>Krog<span style="flex:1"></span><button class=chip id=inst data-a=inst hidden>⬇️ ${t('inst')}</button></header><main id=main></main><div id=cb></div><nav>${[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,i])=>`<button data-a=tab data-k=${k}><b>${i}</b>${t(k)}<i id=bd_${k} hidden></i></button>`).join('')}</nav><button class=fab data-a=new id=fab>＋</button>`}
-function setup(){$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><div class=card><b>⚙️ Firebase</b><p style="margin-top:8px">${L=='sl'?'Aplikacija še nima Firebase nastavitev. Odpri datoteko v urejevalniku in v FB (na vrhu skripte) vpiši svoj config. Če je že vpisan, preveri internetno povezavo (SDK se nalaga iz gstatic.com).':'The app has no Firebase config yet. Open the file in an editor and fill in FB (top of the script). If it is filled in, check your connection (the SDK loads from gstatic.com).'}</p></div></div>`}
-addEventListener('error',e=>toast(e.message));
-function sub(){unsubs.push(
-db.collection('users').onSnapshot(s=>{users={};s.forEach(d=>users[d.id]={...d.data(),id:d.id});render()},er),
-db.doc('config/app').onSnapshot(d=>{cfg=d.data()||{};render()},er),
-db.collection('posts').orderBy('ts','desc').limit(60).onSnapshot(s=>{posts=s.docs.map(d=>({...d.data(),id:d.id}));render()},er));listen()}
-function listen(){cu&&cu();chat=[];cu=db.collection('rooms/'+room+'/msgs').orderBy('ts','desc').limit(100).onSnapshot(s=>{chat=s.docs.map(d=>({...d.data(),id:d.id})).reverse();render()},er)}
-const rid=(a,b)=>[a,b].sort().join('_'),E=['👍','❤️','😂','😮'];
-function sendMsg(v,img){const d={uid:me.id,name:me.name,text:v,ts:Date.now()};if(img)d.img=img;if(rp)d.rp=rp.text||'📷';rp=null;return db.collection('rooms/'+room+'/msgs').add(d)}
-function msgHtml(c){const mine=c.uid==me.id,rs={};Object.values(c.re||{}).forEach(e=>rs[e]=(rs[e]||0)+1);
-return `<div class="msg ${mine?'me':''}" data-a=mo data-id=${c.id}>${mine?'':`<span class=mu>${esc(c.name)}</span>`}<p>${c.rp?`<small style="display:block;opacity:.7;border-left:3px solid var(--y);padding-left:6px;margin-bottom:4px">${esc(c.rp)}</small>`:''}${c.img?`<img src="${c.img}" style="max-width:100%;border-radius:12px;display:block;margin-bottom:4px" data-a=zoomc data-id=${c.id}>`:''}${esc(c.text)}</p>${Object.keys(rs).length?`<span class=mu>${Object.entries(rs).map(([e,n])=>e+n).join(' ')}</span>`:''}${sel==c.id?`<div class=act>${E.map(e=>`<button data-a=re data-id=${c.id} data-e=${e}>${e}</button>`).join('')}<button data-a=rpl data-id=${c.id}>↩️</button></div>`:''}</div>`}
-function card(p){const u=users[p.uid]||{name:p.name},lk=(p.likes||[]).includes(me.id),cs=p.comments||[],id=p.id;
-let b=p.text?`<div style="margin-top:10px;white-space:pre-wrap;word-break:break-word">${esc(p.text)}</div>`:'';
-if(p.type=='poll'){const v=p.votes||{},tot=Object.keys(v).length;b+=`<div style="margin-top:10px;font-weight:700">${esc(p.q)}</div>`+p.opts.map((o,i)=>{const n=Object.values(v).filter(x=>x==i).length;return `<div class=bar data-a=vote data-id=${id} data-i=${i}><u style="width:${tot?n*100/tot:0}%"></u><p><span>${esc(o)}${v[me.id]==i?' ✓':''}</span><span>${n}</span></p></div>`}).join('')}
-if(p.type=='event'){const r=p.rsvp||{},go=Object.keys(r).filter(k=>r[k]=='yes');
-b=`<div style="margin-top:10px;font-size:18px;font-weight:800">📅 ${esc(p.title)}</div><div class=mu>${new Date(p.date).toLocaleString(L,{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})}</div>`+b+`<div class=act><button class="${r[me.id]=='yes'?'on':''}" data-a=rsvp data-id=${id} data-v=yes>✅ ${t('yes')} (${go.length})</button><button class="${r[me.id]=='no'?'on':''}" data-a=rsvp data-id=${id} data-v=no>✖ ${t('no')}</button><button data-a=ics data-id=${id}>📆</button></div>`+(go.length?`<div class=mu style="margin-top:6px">${go.map(k=>esc((users[k]||{}).name)).join(', ')}</div>`:'')}
-if(p.type=='when'){const v=p.votes||{},cn=p.opts.map((o,i)=>Object.values(v).filter(a=>a.includes(i)).length),mx=Math.max(...cn),nu=Object.values(users).filter(u=>u.status=='active').length||1;
-b=`<div style="margin-top:10px;font-size:18px;font-weight:800">🗓 ${esc(p.title)}</div>`+b+p.opts.map((o,i)=>`<div class=bar data-a=free data-id=${id} data-i=${i}><u style="width:${cn[i]*100/nu}%"></u><p><span>${(v[me.id]||[]).includes(i)?'✅ ':''}${cn[i]&&cn[i]==mx?'🏆 ':''}${new Date(o).toLocaleString(L,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span><span>${cn[i]}</span></p></div>`).join('')}
-if(p.img)b+=`<img class=ph src="${p.img}" data-a=zoom data-id=${id}>`;
-return `<div class=card><div class=row>${av(u)}<div style="flex:1"><b>${esc(u.name)}</b><div class=mu>${ago(p.ts)}</div></div>${p.uid==me.id?`<button class=chip data-a=del data-id=${id}>🗑</button>`:''}</div>${b}<div class=act><button class="${lk?'on':''}" data-a=like data-id=${id}>${lk?'❤️':'🤍'} ${(p.likes||[]).length||''}</button><button data-a=cmt data-id=${id}>💬 ${cs.length||''}</button></div>${open[id]?`<div>${cs.map(c=>`<div class=cm><b>${esc(c.name)}</b> ${esc(c.text)}</div>`).join('')}<div class=row style="margin-top:8px"><input id=ci_${id} placeholder="${t('cm')}" autocomplete=off><button class=chip data-a=cs data-id=${id}>➤</button></div></div>`:''}</div>`}
-
-function meView(){const ac=Object.values(users).filter(u=>u.status=='active'),pe=Object.values(users).filter(u=>u.status=='pending'),ad=me.role=='admin';
-return `<div class=card><div class=row>${av(me)}<div><b>${esc(me.name)}</b><div class=mu>${ad?'Admin':''}</div></div></div><div class=act><button data-a=lang>🌐 ${t('lang')}: ${L.toUpperCase()}</button><button data-a=theme>${th=='dark'?'☀️':'🌙'} ${t('theme')}</button><button data-a=out>${t('out')}</button></div></div>`
-+(ad?`<div class=card><b>${t('inv')}</b><div class=row style="margin-top:8px"><input readonly value="${esc(cfg.code||'')}" style="font-weight:800;letter-spacing:3px"><button class=chip data-a=cpc>📋</button><button class=chip data-a=nc>${t('nc')}</button></div></div>`:'')
-+(ad&&pe.length?`<div class=card><b>${t('ask')}</b>${pe.map(u=>`<div class=row style="margin-top:10px">${av(u)}<span style="flex:1">${esc(u.name)}</span><button class=chip data-a=ap data-id=${u.id}>${t('ok')}</button><button class=chip data-a=rj data-id=${u.id}>${t('rej')}</button></div>`).join('')}</div>`:'')
-+`<div class=card><b>${t('mem')} (${ac.length}/20)</b>${ac.map(u=>`<div class=row style="margin-top:10px">${av(u)}<span>${esc(u.name)}</span></div>`).join('')}</div><p class=mu style="padding:4px 6px">${t('hint')}</p>`}
-
-function render(){if(!me||me.status!='active'||!$('#main'))return;const m=$('#main'),emp=`<div class=empty><b>🫶</b>${t('empty')}</div>`;
-document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k==tab));
-$('#inst').hidden=sa();$('#fab').style.display=['home','ev','gal'].includes(tab)?'':'none';
-const cb=$('#cb');if(tab=='chat'){if(!$('#ci'))cb.innerHTML=`<div id=rpv class=mu data-a=rpx style="width:100%"></div><label class=chip style="cursor:pointer">📷<input type=file accept="image/*" id=fc hidden></label><input id=ci placeholder="${t('msg')}" autocomplete=off style="flex:1;width:auto"><button class=cta data-a=sc style="width:auto;padding:0 20px">➤</button>`}else cb.innerHTML='';
-const un={home:posts.filter(p=>p.ts>LS('home')&&p.uid!=me.id).length,chat:chat.filter(c=>c.ts>LS('chat')&&c.uid!=me.id).length};
-for(const k in un){const n=k==tab?0:un[k],b=$('#bd_'+k);if(b){b.hidden=!n;b.textContent=n}if(k==tab)localStorage['s_'+k]=Date.now()}
-let h='';
-if(tab=='home')h=`<div class="card what" data-a=new>${av(me)}<span>${t('txt')}</span><b>📷</b></div>`+(posts.map(card).join('')||emp);
-if(tab=='ev'){const ev=posts.filter(p=>p.type=='event').sort((a,b)=>new Date(a.date)-new Date(b.date)),lim=Date.now()-108e5,up=ev.filter(e=>new Date(e.date)>=lim),ps=ev.filter(e=>new Date(e.date)<lim).reverse();
-h=up.map(card).join('')+(ps.length?`<div class=mu style="margin:18px 4px 0">${t('past')}</div>`+ps.map(card).join(''):'');if(!h)h=`<p class=mu style="text-align:center;margin-top:60px">${t('noev')}</p>`}
-if(tab=='gal'){const g=posts.filter(p=>p.img);h=g.length?`<div class=gal>${g.map(p=>`<img src="${p.img}" data-a=zoom data-id=${p.id}>`).join('')}</div>`:emp}
-if(tab=='chat'){const ms=chat.map(msgHtml).join('');h=`<div class=act style="margin:0 0 8px;flex-wrap:nowrap;overflow-x:auto"><button class="${room=='all'?'on':''}" data-a=room data-r=all>👥 ${L=='sl'?'Vsi':'All'}</button>${Object.values(users).filter(u=>u.status=='active'&&u.id!=me.id).map(u=>{const r=rid(me.id,u.id);return `<button class="${room==r?'on':''}" data-a=room data-r=${r}>${esc(u.name)}</button>`}).join('')}</div>`+(ms||emp)}
-if(tab=='me')h=meView();
-const ae=document.activeElement,keep=ae&&ae.id&&m.contains(ae)?[ae.id,ae.value,ae.selectionStart]:null,top=m.scrollTop;
-m.innerHTML=h;if(tab=='chat'&&$('#rpv'))$('#rpv').textContent=rp?'↩️ '+(rp.text||'📷')+'   ✕':'';m.scrollTop=tab=='chat'?m.scrollHeight:top;
-if(keep){const n=document.getElementById(keep[0]);if(n){n.value=keep[1];n.focus();n.setSelectionRange(keep[2],keep[2])}}}
-
-function sheet(h){$('.sheet')?.remove();const d=document.createElement('div');d.className='sheet';d.dataset.a='x';d.innerHTML='<div>'+h+'</div>';document.body.appendChild(d)}
-function composer(){const ty=cm.type;sheet(`<div class=row style="gap:6px">${['post','poll','event','when'].map(k=>`<button class="chip ${k==ty?'on':''}" data-a=ct data-k=${k}>${t(k)}</button>`).join('')}</div>
-${ty=='event'?`<input id=evt placeholder="${t('evt')}"><input id=evd type=datetime-local>`:''}
-${ty=='when'?`<input id=evt placeholder="${t('evt')}">${[1,2,3,4].map(()=>'<input class=wd type=datetime-local>').join('')}`:''}${ty=='poll'?`<input id=pq placeholder="${t('q')}">${[1,2,3,4].map(i=>`<input class=po placeholder="${t('opt')} ${i}">`).join('')}`:''}
-<textarea id=tx rows=3 placeholder="${t('txt')}"></textarea><img id=pv class=ph style="display:none;margin:0">
-<div class=row><label class=chip>${t('photo')}<input type=file accept="image/*" id=fi hidden></label><span style="flex:1"></span><button class=cta style="width:auto;padding:12px 26px" data-a=pub>${t('send')}</button></div>`);
-$('#tx').value=cm.text||'';if(cm.img){$('#pv').src=cm.img;$('#pv').style.display='block'}}
-
-const P=id=>db.doc('posts/'+id),A={
-inst:()=>{if(ip){ip.prompt();ip=null;render()}else sheet(`<b>${t('inst')}</b><p>${t('ih')}</p><p>${t('ah')}</p><button class=chip data-a=x>✕</button>`)},
-gg:()=>soc(new firebase.auth.GoogleAuthProvider()),fin:()=>{const n=$('#n').value.trim();if(!n)return toast(t('name'));return join(auth.currentUser.uid,n,$('#c').value)},
-li:()=>auth.signInWithEmailAndPassword($('#e').value,$('#p').value),su:signup,tosu:()=>authUI('su'),toli:()=>authUI('li'),out:()=>auth.signOut(),
-lang:()=>{L=L=='sl'?'en':'sl';localStorage.l=L;if($('#main')){shell();render()}else authUI(am)},
-theme:()=>{th=th=='dark'?'light':'dark';localStorage.th=th;document.documentElement.dataset.t=th;render()},
-tab:el=>{tab=el.dataset.k;$('#cb').innerHTML='';render();if(tab!='chat')$('#main').scrollTop=0},
-new:()=>{cm={type:tab=='ev'?'event':'post',img:null};composer()},
-ct:el=>{cm.text=$('#tx').value;cm.type=el.dataset.k;composer()},
-pub:async()=>{const ty=cm.type,text=$('#tx').value.trim(),d={uid:me.id,name:me.name,type:ty,text,ts:Date.now(),likes:[],comments:[]};if(cm.img)d.img=cm.img;
-if(ty=='poll'){d.q=$('#pq').value.trim();d.opts=[...document.querySelectorAll('.po')].map(i=>i.value.trim()).filter(Boolean);d.votes={};if(!d.q||d.opts.length<2)return toast(t('pq'))}
-if(ty=='event'){d.title=$('#evt').value.trim();d.date=$('#evd').value;d.rsvp={};if(!d.title||!d.date)return toast(t('pe'))}
-if(ty=='when'){d.title=$('#evt').value.trim();d.opts=[...document.querySelectorAll('.wd')].map(i=>i.value).filter(Boolean);d.votes={};if(!d.title||d.opts.length<2)return toast(t('pw'))}
-if(ty=='post'&&!text&&!cm.img)return;await db.collection('posts').add(d);$('.sheet').remove();cm={type:'post',img:null}},
-like:(el,id)=>P(id).update({likes:(posts.find(x=>x.id==id).likes||[]).includes(me.id)?F.arrayRemove(me.id):F.arrayUnion(me.id)}),
-vote:(el,id)=>P(id).update({['votes.'+me.id]:+el.dataset.i}),
-rsvp:(el,id)=>P(id).update({['rsvp.'+me.id]:el.dataset.v}),
-del:(el,id)=>confirm(t('del'))&&P(id).delete(),
-cmt:(el,id)=>{open[id]=!open[id];render()},
-cs:(el,id)=>{const i=$('#ci_'+id),v=i.value.trim();if(v){i.value='';return P(id).update({comments:F.arrayUnion({uid:me.id,name:me.name,text:v,ts:Date.now()})})}},
-sc:()=>{const i=$('#ci'),v=i.value.trim();if(v){i.value='';return sendMsg(v)}},
-room:el=>{room=el.dataset.r;sel=null;rp=null;listen()},
-mo:(el,id)=>{sel=sel==id?null:id;render()},
-re:(el,id)=>{sel=null;return db.doc('rooms/'+room+'/msgs/'+id).update({['re.'+me.id]:el.dataset.e})},
-rpl:(el,id)=>{rp=chat.find(c=>c.id==id);sel=null;render();$('#ci')?.focus()},
-rpx:()=>{rp=null;render()},
-zoomc:(el,id)=>sheet(`<img class=ph src="${chat.find(c=>c.id==id).img}" style="margin:0"><button class=chip data-a=x>✕</button>`),
-free:(el,id)=>{const i=+el.dataset.i,v=(posts.find(x=>x.id==id).votes||{})[me.id]||[];return P(id).update({['votes.'+me.id]:v.includes(i)?v.filter(x=>x!=i):[...v,i]})},
-ics:(el,id)=>{const p=posts.find(x=>x.id==id),d=new Date(p.date),f=x=>x.toISOString().replace(/[-:]|\.\d+/g,''),s='BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:'+id+'\nDTSTAMP:'+f(new Date)+'\nDTSTART:'+f(d)+'\nDTEND:'+f(new Date(+d+72e5))+'\nSUMMARY:'+p.title+'\nEND:VEVENT\nEND:VCALENDAR',a=document.createElement('a');a.href=URL.createObjectURL(new Blob([s],{type:'text/calendar'}));a.download='krog.ics';a.click()},
-zoom:(el,id)=>sheet(`<img class=ph src="${posts.find(p=>p.id==id).img}" style="margin:0"><button class=chip data-a=x>✕</button>`),
-x:(el,id,e)=>{if(e.target==el||el.tagName=='BUTTON')$('.sheet')?.remove()},
-nc:()=>db.doc('config/app').update({code:rnd()}),cpc:()=>{navigator.clipboard?.writeText(cfg.code);toast(t('cp'))},
-ap:async(el,id)=>{if(Object.values(users).filter(u=>u.status=='active').length>=20)return toast(t('full'));await db.doc('users/'+id).update({status:'active'})},
-rj:(el,id)=>db.doc('users/'+id).update({status:'rejected'})};
-document.addEventListener('click',async e=>{const el=e.target.closest('[data-a]');if(!el)return;try{await A[el.dataset.a]?.(el,el.dataset.id,e)}catch(x){toast(x.message)}});
-document.addEventListener('keydown',e=>{if(e.key!='Enter'||e.shiftKey)return;const i=e.target.id||'';if(i=='ci')A.sc();else if(i.startsWith('ci_'))A.cs(null,i.slice(3));else if(i=='p'||i=='c')A[am=='su'?'su':'li']().catch(x=>toast(x.message))});
-document.addEventListener('change',async e=>{if(e.target.id=='fc'&&e.target.files[0]){const im=await shrink(e.target.files[0]);e.target.value='';sendMsg('',im)}if(e.target.id=='fi'&&e.target.files[0]){cm.img=await shrink(e.target.files[0]);$('#pv').src=cm.img;$('#pv').style.display='block'}});
+approve:'Odobri|Approve',reject:'Zavrni / odstrani|Reject / remove',full:'Krog je poln (20 članov).|The circle is full (20 members).',
+del:'Izbrišem? Tega ni mogoče razveljaviti.|Delete? This cannot be undone.',cm:'Komentar…|Comment…',ask:'Prošnje za vstop|Join requests',nc:'Nova koda|New code',
+inst:'Namesti|Install',ih:'iPhone: Safari → Deli → Dodaj na začetni zaslon. Android: meni → Namesti aplikacijo.|iPhone: Safari → Share → Add to Home Screen. Android: menu → Install app.',
+go:'Nadaljuj|Continue',past:'Pretekli dogodki|Past events',copy:'Kopiraj|Copy',cp:'Kopirano|Copied',now:'zdaj|now',
+invalid:'Preveri obvezna polja in dolžino vnosa.|Check required fields and input length.',saved:'Shranjeno|Saved',close:'Zapri|Close',save:'Shrani|Save',cancel:'Prekliči|Cancel',
+offline:'Brez povezave. Osnutek ostane v tem oknu; za pošiljanje se poveži.|Offline. Your draft stays in this window; connect to send.',
+online:'Povezano|Connected',loading:'Nalaganje…|Loading…',error:'Ni uspelo. Vnos ostaja; poskusi znova.|Could not complete. Your input is kept; try again.',
+denied:'Dostop zavrnjen. Preveri članstvo in objavljena pravila.|Access denied. Check membership and deployed rules.',
+autherror:'Prijava ni uspela. Preveri podatke in omogočen način prijave.|Sign-in failed. Check credentials and enabled sign-in methods.',
+big:'Slike so prevelike. Izberi manj slik ali manjše fotografije.|Images are too large. Choose fewer or smaller photos.',
+imageerror:'Te slike ni mogoče odpreti. Poskusi JPEG ali PNG.|This image cannot be opened. Try JPEG or PNG.',
+search:'Išči med naloženimi objavami…|Search loaded posts…',more:'Naloži starejše|Load older',loaded:'naloženih objav|loaded posts',
+edit:'Uredi|Edit',pin:'Pripni / odpni|Pin / unpin',pinned:'Pripeto|Pinned',openPost:'Odpri objavo|Open post',profile:'Profil|Profile',bio:'Kratek opis|Short bio',
+birthday:'Rojstni dan (brez letnice)|Birthday (no year)',month:'Mesec|Month',day:'Dan|Day',birthdayToday:'Danes praznuje|Happy birthday',
+profilephoto:'Profilna slika|Profile photo',removephoto:'Odstrani sliko|Remove photo',memberposts:'Objave člana|Member posts',
+daily:'Vprašanje dneva|Question of the day',answer:'Tvoj odgovor v eni vrstici|Your one-line answer',answerBtn:'Odgovori|Answer',
+daily1:'Kaj ti je danes polepšalo dan?|What made your day better?',daily2:'Kdo je za sprehod ta teden?|Who is up for a walk this week?',
+daily3:'Katero pesem imaš na ponavljanju?|Which song is on repeat?',daily4:'Katero drobno zmago praznuješ?|What small win are you celebrating?',
+daily5:'Kje se naslednjič dobimo?|Where should we meet next?',daily6:'Pokaži utrinek svojega dne.|Share a glimpse of your day.',
+questionSL:'Vprašanje v slovenščini|Question in Slovenian',questionEN:'Vprašanje v angleščini|Question in English',
+daily7:'Kaj bi rad počel ta vikend?|What would you like to do this weekend?',customDaily:'Vprašanje po meri za danes (slovenščina / angleščina)|Custom question for today (Slovenian / English)',
+story:'Zgodba · 24 h|Story · 24 h',storyHint:'Kratek utrinek. Po 24 urah ni več viden.|A quick moment. No longer visible after 24 hours.',
+anonHint:'En glas, brez sprememb. Objavljeni so samo seštevki. Pri majhni skupini je mogoče glas sklepati iz časa spremembe.|One vote, no changes. Only totals are published. In a small group, timing may reveal a vote.',
+voted:'Glas je oddan|Vote submitted',results:'Rezultati|Results',vote:'Glasuj|Vote',
+tools:'Skupaj lažje|Easier together',expenses:'Stroški|Expenses',lists:'Skupni seznami|Shared lists',amount:'Znesek EUR|Amount EUR',paid:'Plačal/-a|Paid by',
+forWho:'Razdeli enako med|Split equally among',expenseTitle:'Za kaj?|What for?',settle:'Kdo komu dolguje|Who owes whom',
+balanced:'Stanje je poravnano.|All balanced.',expenseHint:'Izračun zajema naložene stroške. Nakazila dogovorite zunaj aplikacije.|Calculation includes loaded expenses. Arrange transfers outside the app.',
+listTitle:'Ime seznama|List name',item:'Dodaj opravilo ali stvar|Add a task or item',unassigned:'Brez dodelitve|Unassigned',add:'Dodaj|Add',
+reminder:'Dodaj v koledar · opomnik|Add to calendar · reminder',attend:'Udeležba|Attendance',
+memories:'Na današnji dan|On this day',week:'Zadnjih 7 dni|Last 7 days',best:'Najbolj priljubljena objava|Most popular post',activeMember:'Največ objav|Most posts',
+loadedHint:'Povzetek in iskanje zajemata naložene objave; za več naloži starejše.|Summary and search cover loaded posts; load older posts for more.',
+bell:'Obvestila|Notifications',notificationHint:'Obvestila iz zadnjih 100 dejavnosti; za klepet velja značka odprtega pogovora.|Notifications from the latest 100 activities; chat badge covers the selected conversation.',
+newpost:'Nova objava|New post',newcomment:'Komentar na tvojo objavo|Comment on your post',newreaction:'Reakcija na tvojo objavo|Reaction on your post',
+mention:'Omenjen/-a si|You were mentioned',newevent:'Nov dogodek|New event',unread:'Neprebrano|Unread',readall:'Označi kot prebrano|Mark as read',
+welcome:'Dobrodošel v Krogu|Welcome to Krog',welcomeBody:'Za začetek povej nekaj o sebi, odgovori na vprašanje dneva ali deli droben trenutek. En stavek je dovolj. Objave vidijo samo aktivni člani.|Start with your profile, answer today’s question or share a small moment. One sentence is enough. Only active members see posts.',
+start:'Gremo|Let’s go',export:'Izvozi arhiv|Export archive',exportHint:'Arhiv vsebuje profile, objave, sezname, stroške in skupinski klepet. Brez zasebnih pogovorov in zasebnih glasov.|Archive includes profiles, posts, lists, expenses and group chat. No private conversations or private ballots.',
+migrate:'Zavaruj obstoječe članstvo|Secure existing membership',migrateHint:'Administrator mora enkrat potrditi seznam obstoječih aktivnih članov (največ 20). Podatki ostanejo na mestu.|An administrator must confirm the existing active roster once (up to 20). Existing data stays in place.',
+remove:'Odstrani|Remove',reply:'Odgovori|Reply',all:'Vsi|All',noresults:'Ni zadetkov.|No matches.',retry:'Poskusi znova|Try again',
+mentions:'Omeni člana|Mention a member',dates:'Termini (lokalni datum in ura)|Dates (local date and time)',resetpw:'Ponastavi geslo|Reset password',
+resetSent:'Če račun obstaja, preveri e-pošto za ponastavitev.|If the account exists, check your email for a reset link.',
+archiveBusy:'Pripravljam arhiv…|Preparing archive…',confirmRemove:'Odstranim dostop temu članu?|Remove this member’s access?',
+bootstrap:'Ustvari krog|Create circle',bootHint:'Prvi potrjeni vpis ustvari administratorja. Če obstoječi krog še ni nadgrajen, naj se najprej prijavi njegov administrator.|The first completed registration creates the administrator. For an existing circle, its administrator must sign in first.',
+sync:'Čakam potrditev strežnika. Ne pošiljaj še enkrat.|Waiting for server confirmation. Do not send again.',
+listEmpty:'Seznam je še prazen.|The list is empty.',storyGone:'Zgodba je potekla.|Story has expired.',cleanup:'Počisti potekle zgodbe|Clean expired stories',
+replyQuote:'Citirano sporočilo|Quoted message',range:'Vnesi veljaven datum ali znesek.|Enter a valid date or amount.',
+codeInvalid:'Koda ni veljavna. Nadaljuj brez kode za ročno odobritev.|Invalid code. Continue without a code for manual approval.',
+migrationRequired:'Obstoječi administrator mora najprej nadgraditi članstvo.|The existing administrator must upgrade membership first.',
+limit:'Dosežena je omejitev tega vnosa.|This item has reached its limit.'
+};
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store={get(k,d=''){try{return localStorage.getItem(k)??d}catch{return d}},set(k,v){try{localStorage.setItem(k,String(v))}catch{}}};
+let L=store.get('l',navigator.language.startsWith('sl')?'sl':'en'),th=store.get('th',matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+if(!['sl','en'].includes(L))L='sl';
+const t=k=>(S[k]||k).split('|')[L==='sl'?0:1];document.documentElement.dataset.t=th;document.documentElement.lang=L;
+const E=['👍','❤️','😂','😮','🎉'],COLORS=['#2f5bff','#8753b8','#197f73','#aa5a28','#b54468'];
+let db,auth,F,me=null,state=null,cfg={},users={},posts=[],stories=[],expenses=[],lists=[],activities=[],messages=[];
+let memories=[],events=[],pinnedPosts=[],memoryDay='';
+const findPost=id=>[...posts,...events,...memories,...pinnedPosts].find(p=>p.id===id);
+let tab='home',room='all',unsubs=[],selfUnsub=null,roomUnsub=null,session=0,started=false,signMode='li',rp=null;
+let postLimit=20,search='',expanded=new Set(),draftImages=[],profileImage='',sheetUnsub=null,focusBack=null,renderPending=false;
+const counts={},ballots={},dailyReplies={},fieldDrafts={},chatDrafts={};let extrasUnsubs=[],authUser=null,ip=null;
+const dayKey=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const ts=()=>Date.now(),activeUsers=()=>Object.values(users).filter(u=>u.status==='active'&&(!state||state.activeIds.includes(u.id)));
+const isAdmin=()=>me?.role==='admin',nameOf=id=>users[id]?.name||'?',key=k=>'krog:'+me.id+':'+k;
+const readAt=k=>Number(store.get(key(k),'0'))||0;
+function toast(m){$('#toast').textContent=m;$('#toast').style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').style.opacity=0,3800)}
+function fail(e){console.warn(e?.code||e?.message||e);toast(e?.message?.startsWith('KROG:')?t(e.message.slice(5)):e?.code==='permission-denied'?t('denied'):e?.code?.startsWith('auth/')?t('autherror'):t('error'))}
+function checkOnline(){if(!navigator.onLine)throw Error('KROG:offline')}
+function limitDoc(d,max=800000){if(new TextEncoder().encode(JSON.stringify(d)).length>max)throw Error('KROG:big')}
+function avatar(u={}){const c=COLORS.includes(u.color)?u.color:'#2f5bff';return '<div class="av" style="background:'+c+'">'+(imageOK(u.avatar)?'<img alt="" src="'+u.avatar+'">':esc((u.name||'?')[0].toUpperCase()))+'</div>'}
+function imageOK(v){return typeof v==='string'&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(v)}
+function image(v,cls='ph'){return imageOK(v)?'<img class="'+cls+'" alt="" loading="lazy" src="'+v+'">':''}
+function images(p){return [p.img,...(Array.isArray(p.imgs)?p.imgs:[])].filter(imageOK)}
+function ago(n){const s=(ts()-n)/1000;return s<60?t('now'):s<3600?Math.floor(s/60)+' min':s<86400?Math.floor(s/3600)+' h':new Date(n).toLocaleDateString(L)}
+function btn(a,label,data='',cls='chip'){return '<button class="'+cls+'" data-a="'+a+'" '+data+'>'+label+'</button>'}
+function field(id,label,type='text',value='',extra=''){return '<label class="field">'+t(label)+'<input id="'+id+'" type="'+type+'" value="'+esc(value)+'" '+extra+'></label>'}
+function textarea(id,label,value='',max=4000){return '<label class="field">'+t(label)+'<textarea id="'+id+'" rows="3" maxlength="'+max+'">'+esc(value)+'</textarea></label>'}
+function idattr(id){return 'data-id="'+esc(id)+'"'}
+function profileLink(u){return btn('profile',esc(u.name),idattr(u.id))}
+function mapChange(before,after,uid,value){return {...(before||{}),[uid]:value}}
+function download(name,data,type){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000)}
+async function shrink(file,max=900){
+ if(!file||file.size>25*1024*1024)throw Error('KROG:big');
+ return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file),im=new Image();const done=()=>URL.revokeObjectURL(url);
+ im.onload=()=>{try{const scale=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.naturalWidth*scale));c.height=Math.max(1,Math.round(im.naturalHeight*scale));const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(im,0,0,c.width,c.height);resolve(c.toDataURL('image/jpeg',.6))}catch(e){reject(e)}finally{done()}};
+ im.onerror=()=>{done();reject(Error('KROG:imageerror'))};im.src=url});
+}
+function viewport(){document.documentElement.style.setProperty('--vh',(window.visualViewport?.height||innerHeight)+'px')}
+viewport();window.visualViewport?.addEventListener('resize',viewport);addEventListener('resize',viewport);
+function closeSheet(){clearTimeout(sheet.expiry);sheetUnsub?.();sheetUnsub=null;$('.sheet')?.remove();focusBack?.focus?.();focusBack=null}
+function sheet(title,body){closeSheet();focusBack=document.activeElement;const el=document.createElement('div');el.className='sheet';el.innerHTML='<div role="dialog" aria-modal="true" aria-label="'+esc(title)+'">'+btn('close','✕ '+t('close'),'','chip close')+'<h2>'+esc(title)+'</h2>'+body+'</div>';el.addEventListener('click',e=>{if(e.target===el)closeSheet()});document.body.append(el);el.querySelector('button')?.focus()}
+function cleanup(){unsubs.forEach(f=>f());unsubs=[];extrasUnsubs.forEach(f=>f());extrasUnsubs=[];roomUnsub?.();roomUnsub=null;sheetUnsub?.();sheetUnsub=null;started=false;posts=[];memories=[];events=[];pinnedPosts=[];memoryDay='';users={};stories=[];expenses=[];lists=[];activities=[];messages=[];for(const o of [counts,ballots,dailyReplies,fieldDrafts,chatDrafts])Object.keys(o).forEach(k=>delete o[k]);closeSheet()}
+function authUI(mode=signMode){signMode=mode;const su=mode==='su';$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('sub')+'</p>'+btn('google','Google','','cta soc')+(su?field('an','name','text','','maxlength="50" autocomplete="name"'):'')+field('ae','email','email','','autocomplete="email"')+field('ap','pw','password','','autocomplete="'+(su?'new-password':'current-password')+'" minlength="6"')+(su?field('ac','code'):'')+btn(su?'signup':'login',t(su?'signup':'login'),'','cta')+btn(su?'toli':'tosu',t(su?'login':'signup'))+btn('reset',t('resetpw'))+btn('lang','🌐 '+L.toUpperCase())+'</div>'}
+function finishUI(){ $('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('bootHint')+'</p>'+field('an','name','text',authUser.displayName||'','maxlength="50"')+field('ac','code')+btn('finish',t('go'),'','cta')+btn('logout',t('out'))+'</div>' }
+function randomCode(){const a=new Uint8Array(12);crypto.getRandomValues(a);return Array.from(a,n=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n%32]).join('')}
+async function join(name,code){
+ checkOnline();name=name.trim();code=code.trim().toUpperCase();if(!name||name.length>50)throw Error('KROG:invalid');
+ const uid=auth.currentUser.uid,ur=db.doc('users/'+uid),sr=db.doc('config/state');
+ await db.runTransaction(async tx=>{
+ const st=await tx.get(sr),ud=await tx.get(ur);if(ud.exists)return;
+ const data={name,role:'member',status:'pending',color:COLORS[Math.floor(Math.random()*COLORS.length)],ts:ts()};
+ if(!st.exists){
+ // Existing installations must be bootstrapped by their administrator before deploying these rules.
+ const invite=randomCode();data.role='admin';data.status='active';tx.set(sr,{adminUid:uid,activeIds:[uid]});tx.set(db.doc('config/app'),{code:invite});tx.set(db.doc('invites/'+invite),{enabled:true});tx.set(ur,data);return;
+ }
+ if(code){const inv=await tx.get(db.doc('invites/'+code));if(!inv.exists)throw Error('KROG:codeInvalid');if(st.data().activeIds.length>=20)throw Error('KROG:full');data.status='active';tx.set(db.doc('enrollment/'+uid),{code});tx.update(sr,{activeIds:[...st.data().activeIds,uid]})}
+ tx.set(ur,data);
+ });
+}
+async function onAuth(u){
+ session++;const token=session;selfUnsub?.();cleanup();me=null;authUser=u;state=null;cfg={};tab='home';room='all';
+ if(!u)return authUI();
+ $('#app').innerHTML='<div class="auth">'+t('loading')+'</div>';
+ selfUnsub=db.doc('users/'+u.uid).onSnapshot(async d=>{
+ if(token!==session)return;
+ if(!d.exists)return finishUI();me={...d.data(),id:u.uid};
+ if(me.status!=='active'){cleanup();$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t(me.status==='rejected'?'rejected':'pend')+'</p>'+btn('logout',t('out'))+'</div>';return}
+ if(started){scheduleRender();return}
+ try{const s=await db.doc('config/state').get();if(token!==session)return;state=s.exists?s.data():null;
+ if(!state){if(!isAdmin())throw Error('KROG:migrationRequired');$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('migrateHint')+'</p>'+btn('migrate',t('migrate'),'','cta')+btn('logout',t('out'))+'</div>';return}
+ if(!state.activeIds.includes(me.id)){cleanup();$('#app').innerHTML='<div class="auth"><p>'+t('rejected')+'</p>'+btn('logout',t('out'))+'</div>';return}
+ started=true;shell();subscribe();if(!me.onboarded)welcome();
+ }catch(e){fail(e)}
+ },fail);
+}
+function shell(){
+ $('#app').innerHTML='<header><i></i>Krog<span style="flex:1"></span>'+btn('notifications','🔔 <span id="bellCount" class="badge" hidden></span>','aria-label="'+t('bell')+'"')+btn('install','↓','aria-label="'+t('inst')+'"')+'</header><div class="status" id="status" role="status"></div><main id="main"></main><div id="cb"></div><nav>'+[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,e])=>btn('tab','<b>'+e+'</b>'+t(k)+'<i id="badge_'+k+'" hidden></i>','data-k="'+k+'"','')).join('')+'</nav>'+btn('new','＋','aria-label="'+t('post')+'" id="fab"','fab');render();
+}
+function stream(query,assign){unsubs.push(query.onSnapshot(s=>{assign(s);scheduleRender()},fail))}
+function docs(s){return s.docs.map(d=>({...d.data(),id:d.id}))}
+let postsUnsub=null;
+function loadPosts(){postsUnsub?.();postsUnsub=db.collection('posts').orderBy('ts','desc').limit(postLimit).onSnapshot(s=>{posts=docs(s);scheduleRender()},fail)}
+function subscribe(){
+ stream(db.doc('config/state'),s=>{state=s.data();if(!state?.activeIds.includes(me.id)){cleanup();$('#app').innerHTML='<div class="auth">'+t('rejected')+btn('logout',t('out'))+'</div>'}});
+ stream(db.collection('users'),s=>{users=Object.fromEntries(docs(s).map(u=>[u.id,u]))});
+ if(isAdmin())stream(db.doc('config/app'),s=>cfg={...cfg,...(s.data()||{})});
+ stream(db.doc('config/daily'),s=>cfg.daily=s.data()||{});
+ stream(db.collection('posts').where('type','==','event').where('date','>=',dayKey()).orderBy('date').limit(50),s=>events=docs(s));
+ stream(db.collection('posts').where('pinned','==',true).limit(10),s=>pinnedPosts=docs(s));
+ loadMemories();loadPosts();unsubs.push(()=>postsUnsub?.());
+ stream(db.collection('expenses').orderBy('ts','desc'),s=>expenses=docs(s));
+ stream(db.collection('lists').orderBy('ts','desc'),s=>lists=docs(s));
+ stream(db.collection('activity').orderBy('ts','desc').limit(100),s=>activities=docs(s));
+ listenStories();listenRoom();listenDaily();
+}
+let storyUnsub=null,storyFloor=0;
+async function listenStories(){
+ storyFloor=ts();const token=session;
+ try{const s=await db.collection('stories').where('expiresAt','>',firebase.firestore.Timestamp.fromMillis(storyFloor+60000)).orderBy('expiresAt','desc').limit(40).get();if(token!==session||!started)return;stories=docs(s);scheduleRender()}catch(e){fail(e)}
+}
+function stopStories(){storyUnsub?.();storyUnsub=null}
+function listenRoom(){
+ roomUnsub?.();messages=[];roomUnsub=db.collection('rooms/'+room+'/msgs').orderBy('ts','desc').limit(100).onSnapshot(s=>{messages=docs(s).reverse();scheduleRender()},fail);
+}
+async function loadMemories(){
+ const today=new Date(),day=dayKey();if(memoryDay===day)return;memoryDay=day;const token=session;
+ try{const first=await db.collection('posts').orderBy('ts').limit(1).get();if(first.empty)return;const firstYear=new Date(first.docs[0].data().ts).getFullYear(),found=[];
+ for(let year=today.getFullYear()-1;year>=Math.max(firstYear,today.getFullYear()-5);year--){const start=new Date(year,today.getMonth(),today.getDate());if(start.getMonth()!==today.getMonth())continue;const end=new Date(year,today.getMonth(),today.getDate()+1);const s=await db.collection('posts').where('ts','>=',+start).where('ts','<',+end).orderBy('ts','desc').limit(3).get();found.push(...docs(s))}
+ if(token===session){memories=found;scheduleRender()}}catch(e){memoryDay='';fail(e)}
+}
+let dailyKey='';
+function listenDaily(){
+ const d=dayKey();if(dailyKey===d&&dailyReplies[d])return;dailyKey=d;loadMemories();
+ extrasUnsubs.push(db.collection('daily/'+d+'/answers').onSnapshot(s=>{dailyReplies[d]=docs(s);scheduleRender()},fail));
+}
+function scheduleRender(){if(renderPending)return;renderPending=true;requestAnimationFrame(()=>{renderPending=false;if(document.activeElement?.matches('#main input,#main textarea,#main select')){render.dirty=true;updateBadges();return}render()})}
+function updateBadges(){
+ if(!me||!$('#bellCount'))return;const n=notifications().filter(a=>a.ts>readAt('notifications')).length;$('#bellCount').textContent=n;$('#bellCount').hidden=!n;
+ for(const [k,n] of Object.entries({home:posts.filter(p=>p.uid!==me.id&&p.ts>readAt('home')).length,chat:messages.filter(p=>p.uid!==me.id&&p.ts>readAt('room:'+room)).length})){const b=$('#badge_'+k);b.textContent=n;b.hidden=!n||tab===k}
+}
+function notifications(){return activities.filter(a=>a.actor!==me.id&&(a.kind==='post'||a.kind==='event'||a.targetUid===me.id||(a.mentions||[]).includes(me.id)))}
+function mentions(text){return activeUsers().filter(u=>text.toLocaleLowerCase().includes('@'+u.name.toLocaleLowerCase())).map(u=>u.id)}
+function activity(batch,kind,ref,data,targetUid=null){
+ const a={actor:me.id,kind,ref,ts:ts(),text:String(data.text||data.title||data.q||'').slice(0,160),mentions:mentions(data.text||'')};if(targetUid)a.targetUid=targetUid;
+ batch.set(db.collection('activity').doc(),a);
+}
+function dailyQuestion(){const d=cfg.daily;if(d?.day===dayKey()&&d.sl&&d.en)return L==='sl'?d.sl:d.en;const n=Math.floor(Date.UTC(new Date().getFullYear(),new Date().getMonth(),new Date().getDate())/86400000);return t('daily'+(n%7+1))}
+function dailyHTML(){
+ const replies=dailyReplies[dayKey()]||[],own=replies.find(x=>x.id===me.id);
+ return '<section class="card"><div class="mu">'+t('daily')+'</div><h3>'+esc(dailyQuestion())+'</h3><div class="row" style="margin-top:10px"><input id="dailyAnswer" maxlength="240" aria-label="'+t('answer')+'" placeholder="'+t('answer')+'" value="'+esc(own?.text||'')+'">'+btn('answer',t('answerBtn'))+'</div>'+replies.map(r=>'<div class="cm"><b>'+esc(nameOf(r.id))+'</b> '+esc(r.text)+'</div>').join('')+'</section>';
+}
+function storyHTML(){const live=stories.filter(s=>s.expiresAt?.toMillis()>ts());return '<div class="strip">'+btn('storyNew','＋ '+t('story'),'','story')+live.map(s=>'<button class="story" data-a="storyView" '+idattr(s.id)+'>'+image(s.img)+'<b>'+esc(nameOf(s.uid))+'</b><span>'+esc(s.text)+'</span></button>').join('')+'</div>'}
+function rituals(){
+ const today=new Date(),bd=activeUsers().filter(u=>u.birthday===String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0'));
+ const old=memories.filter(p=>{const d=new Date(p.ts);return d.getFullYear()<today.getFullYear()&&d.getMonth()===today.getMonth()&&d.getDate()===today.getDate()});
+ const week=posts.filter(p=>p.ts>ts()-7*86400000),score=p=>new Set([...Object.keys(p.reactions||{}),...(p.likes||[])]).size,best=[...week].sort((a,b)=>score(b)-score(a))[0],freq={};week.forEach(p=>freq[p.uid]=(freq[p.uid]||0)+1);const most=Object.keys(freq).sort((a,b)=>freq[b]-freq[a])[0];
+ return bd.map(u=>'<div class="notice">🎂 '+t('birthdayToday')+': '+esc(u.name)+' '+btn('birthdayICS','📆',idattr(u.id))+'</div>').join('')+(old.length?'<div class="card"><h3>'+t('memories')+'</h3>'+old.slice(0,2).map(p=>btn('jump',esc(p.text?.slice(0,90)||p.title||p.name),idattr(p.id))).join('')+'</div>':'')+
+ '<details class="card"><summary>'+t('week')+'</summary><p class="mu">'+t('loadedHint')+'</p>'+(best?'<p>'+t('best')+': '+esc(best.text?.slice(0,100)||best.title||best.q||nameOf(best.uid))+'</p>':'')+(most?'<p>'+t('activeMember')+': '+esc(nameOf(most))+' ('+freq[most]+')</p>':'')+upcoming().slice(0,3).map(p=>'<p>📅 '+esc(p.title)+' · '+esc(new Date(p.date).toLocaleDateString(L))+'</p>').join('')+'</details>';
+}
+function upcoming(){return [...new Map([...events,...posts].map(p=>[p.id,p])).values()].filter(p=>p.type==='event'&&new Date(p.date)>=new Date()).sort((a,b)=>new Date(a.date)-new Date(b.date))}
+function ensureAnon(p){
+ if(counts[p.id])return;counts[p.id]={};
+ extrasUnsubs.push(db.collection('posts/'+p.id+'/results').onSnapshot(s=>{counts[p.id]=Object.fromEntries(s.docs.map(d=>[d.id,d.data().count]));scheduleRender()},fail));
+ extrasUnsubs.push(db.doc('posts/'+p.id+'/ballots/'+me.id).onSnapshot(s=>{ballots[p.id]=s.exists?s.data().choice:null;scheduleRender()},fail));
+}
+function card(p){
+ const u=users[p.uid]||{name:p.name,id:p.uid},id=p.id,own=p.uid===me.id,comments=p.comments||[];
+ let body=p.text?'<div class="line">'+esc(p.text)+'</div>':'';
+ if(p.type==='poll'||p.type==='anon'){
+ const anon=p.type==='anon';if(anon)ensureAnon(p);const vs=p.votes||{},choice=anon?ballots[id]:vs[me.id];
+ body+='<h3>'+esc(p.q)+'</h3>'+(anon?'<p class="mu">'+t('anonHint')+'</p>':'')+(p.opts||[]).map((o,i)=>{const n=anon?(counts[id]?.[i]||0):Object.values(vs).filter(v=>v===i).length;return btn(anon?'anonVote':'vote',esc(o)+' · '+n+(choice===i?' ✓':''),idattr(id)+' data-i="'+i+'" '+(anon&&choice!=null?'disabled':''),'bar')}).join('');
+ }else if(p.type==='event'){
+ const r=p.rsvp||{};body='<h3>📅 '+esc(p.title)+'</h3><p class="mu">'+esc(new Date(p.date).toLocaleString(L))+'</p>'+body+'<div class="act">'+['yes','maybe','no'].map(v=>btn('rsvp',t(v)+' ('+Object.values(r).filter(x=>x===v).length+')',idattr(id)+' data-v="'+v+'"',r[me.id]===v?'chip on':'chip')).join('')+btn('ics','📆 '+t('reminder'),idattr(id))+'</div>'+['yes','maybe','no'].map(v=>'<p class="mu">'+t(v)+': '+Object.keys(r).filter(k=>r[k]===v).map(k=>esc(nameOf(k))).join(', ')+'</p>').join('');
+ }else if(p.type==='when'){
+ body='<h3>🗓 '+esc(p.title)+'</h3>'+body+(p.opts||[]).map((o,i)=>btn('free',((p.votes?.[me.id]||[]).includes(i)?'✓ ':'')+esc(new Date(o).toLocaleString(L))+' · '+Object.values(p.votes||{}).filter(v=>Array.isArray(v)&&v.includes(i)).length,idattr(id)+' data-i="'+i+'"','bar')).join('');
+ }
+ const pics=images(p);body+='<div class="'+(pics.length>1?'grid':'')+'">'+pics.map((v,i)=>'<button class="chip" data-a="zoom" '+idattr(id)+' data-i="'+i+'">'+image(v)+'</button>').join('')+'</div>';
+ const reactions=p.reactions||{},lc=p.likes||[];
+ return '<article class="card" id="post_'+esc(id)+'"><div class="row">'+avatar(u)+'<div style="flex:1">'+profileLink(u)+'<div class="mu">'+ago(p.ts)+(p.pinned?' · 📌 '+t('pinned'):'')+'</div></div>'+((own||isAdmin())?btn('postMenu','⋯',idattr(id)+' aria-label="'+t('edit')+'"'):'')+'</div>'+body+'<div class="act">'+E.map(e=>btn('react',e+' '+(Object.values(reactions).filter(x=>x===e).length+(e==='❤️'?lc.filter(uid=>!Object.hasOwn(reactions,uid)).length:0)||''),idattr(id)+' data-e="'+e+'"',(reactions[me.id]===e||(!reactions[me.id]&&e==='❤️'&&lc.includes(me.id)))?'chip on':'chip')).join('')+btn('comments','💬 '+comments.length,idattr(id))+'</div>'+(expanded.has(id)?comments.map(c=>'<p class="cm"><b>'+esc(c.name)+'</b> '+esc(c.text)+'</p>').join('')+'<div class="row"><input id="comment_'+id+'" maxlength="1000" placeholder="'+t('cm')+'" aria-label="'+t('cm')+'">'+btn('comment','➤',idattr(id))+'</div>':'')+'</article>';
+}
+function chatHTML(){
+ return '<div class="strip">'+btn('room',t('all'),'data-room="all"',room==='all'?'chip on':'chip')+activeUsers().filter(u=>u.id!==me.id).map(u=>{const id=[u.id,me.id].sort().join('_');return btn('room',esc(u.name),'data-room="'+esc(id)+'" '+idattr(u.id),room===id?'chip on':'chip')}).join('')+'</div>'+messages.map(m=>'<div class="msg '+(m.uid===me.id?'me':'')+'"><span class="mu">'+esc(nameOf(m.uid))+' · '+ago(m.ts)+'</span><p>'+(m.rp?'<small>'+esc(m.rp)+'</small><br>':'')+image(m.img)+esc(m.text)+'</p><div class="act">'+btn('reply','↩',idattr(m.id)+' aria-label="'+t('reply')+'"')+E.slice(0,3).map(e=>btn('msgReact',e+' '+(Object.values(m.re||{}).filter(x=>x===e).length||''),idattr(m.id)+' data-e="'+e+'"')).join('')+'</div></div>').join('');
+}
+function render(){
+ if(!started||!me||!$('#main'))return;
+ const m=$('#main'),top=m.scrollTop,nearBottom=m.scrollHeight-m.clientHeight-top<100,oldTab=render.tab;
+ $('#status').textContent=navigator.onLine?'':t('offline');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===tab));$('#fab').hidden=!['home','ev','gal'].includes(tab);
+ let h='';
+ if(tab==='home'){
+ const filtered=[...new Map([...pinnedPosts,...posts].map(p=>[p.id,p])).values()].filter(p=>[p.text,p.title,p.q,p.name].join(' ').toLocaleLowerCase().includes(search.toLocaleLowerCase())).sort((a,b)=>Number(!!b.pinned)-Number(!!a.pinned)||b.ts-a.ts);
+ h=storyHTML()+dailyHTML()+rituals()+'<div class="row"><input id="search" value="'+esc(search)+'" placeholder="'+t('search')+'" aria-label="'+t('search')+'">'+btn('search','⌕')+'</div><p class="mu">'+posts.length+' '+t('loaded')+'</p>'+filtered.map(card).join('')+(!filtered.length?'<p class="empty">'+t('noresults')+'</p>':'')+btn('more',t('more'),'','cta');
+ }
+ if(tab==='ev')h='<div class="card"><h3>'+t('tools')+'</h3><div class="act">'+btn('expenses','€ '+t('expenses'))+btn('lists','☑ '+t('lists'))+'</div></div>'+upcoming().map(card).join('')+'<details><summary>'+t('past')+'</summary>'+posts.filter(p=>p.type==='event'&&new Date(p.date)<new Date()).map(card).join('')+'</details>'+posts.filter(p=>p.type==='when').map(card).join('');
+ if(tab==='gal')h='<div class="gal">'+posts.flatMap(p=>images(p).map((v,i)=>'<button data-a="zoom" '+idattr(p.id)+' data-i="'+i+'">'+image(v)+'</button>')).join('')+'</div>'+btn('more',t('more'));
+ if(tab==='me')h=meHTML();
+ if(tab==='chat')h=chatHTML();
+ m.innerHTML=h;for(const el of m.querySelectorAll('input[id],textarea[id]'))if(Object.hasOwn(fieldDrafts,el.id))el.value=fieldDrafts[el.id];
+ if(tab==='chat'){
+ if(!$('#chatText')){render.room=null;$('#cb').innerHTML='<div id="quote" class="mu" style="width:100%"></div><label class="chip">📷<input id="chatPhoto" type="file" accept="image/*" hidden></label><input id="chatText" maxlength="4000" aria-label="'+t('msg')+'" placeholder="'+t('msg')+'" style="flex:1;width:0">'+btn('sendMessage','➤');}
+ if(render.room!==room){$('#chatText').value=chatDrafts[room]||'';render.room=room;}
+ $('#quote').textContent=rp?'↩ '+(rp.text||'📷'):'';m.scrollTop=oldTab!==tab||nearBottom?m.scrollHeight:top;
+ }else{$('#cb').innerHTML='';m.scrollTop=oldTab===tab?top:0}
+ render.tab=tab;render.dirty=false;if(!document.hidden){if(tab==='home'&&posts.length)store.set(key('home'),Math.max(...posts.map(p=>p.ts)));if(tab==='chat'&&messages.length)store.set(key('room:'+room),Math.max(...messages.map(p=>p.ts)))}
+ updateBadges();
+}
+function meHTML(){
+ const ac=activeUsers(),pending=Object.values(users).filter(u=>u.status==='pending');
+ return '<div class="card"><div class="row">'+avatar(me)+'<h3>'+esc(me.name)+'</h3></div><p>'+esc(me.bio||'')+'</p><div class="act">'+btn('editProfile',t('edit'))+btn('lang','🌐 '+L.toUpperCase())+btn('theme',t('theme'))+btn('logout',t('out'))+'</div></div>'+
+ (isAdmin()?'<div class="card"><h3>'+t('inv')+'</h3><p>'+esc(cfg.code||'')+'</p><div class="act">'+btn('copyCode',t('copy'))+btn('newCode',t('nc'))+btn('customDaily',t('daily'))+btn('export',t('export'))+btn('cleanup',t('cleanup'))+'</div></div>'+pending.map(u=>'<div class="card">'+esc(u.name)+'<div class="act">'+btn('approve',t('approve'),idattr(u.id))+btn('reject',t('reject'),idattr(u.id))+'</div></div>').join(''):'')+
+ '<div class="card"><h3>'+t('mem')+' · '+ac.length+'/20</h3>'+ac.map(u=>'<div class="row" style="margin-top:10px">'+avatar(u)+profileLink(u)+(isAdmin()&&u.id!==me.id?btn('reject','×',idattr(u.id)+' aria-label="'+t('remove')+'"'):'')+'</div>').join('')+'</div>';
+}
+function welcome(){sheet(t('welcome'),'<p>'+t('welcomeBody')+'</p>'+btn('onboard',t('start'),'','cta'))}
+function composer(p=null){
+ draftImages=p?images(p):[];const type=p?.type||(tab==='ev'?'event':'post');sheet(p?t('edit'):t('post'),(!p?'<select id="postType" aria-label="'+t('post')+'">'+['post','poll','anon','event','when'].map(k=>'<option value="'+k+'">'+t(k)+'</option>').join('')+'</select>':'<input id="postType" type="hidden" value="'+type+'">')+
+ '<div id="specialFields"></div>'+textarea('postText','txt',p?.text||'')+'<label class="field">'+t('mentions')+'<select id="mentionPick"><option value="">@</option>'+activeUsers().map(u=>'<option value="'+esc(u.name)+'">'+esc(u.name)+'</option>').join('')+'</select></label>'+
+ '<div id="imagePreview"></div><label class="chip">'+t('photo')+'<input id="postPhotos" type="file" accept="image/*" multiple hidden></label>'+btn('publish',t('save'),p?idattr(p.id):'','cta'));
+ $('#postType').value=type;composerFields(p);previewImages();
+}
+function composerFields(p=null){
+ const type=$('#postType').value;let h='';
+ if(['event','when'].includes(type))h+=field('postTitle','evt','text',p?.title||'','maxlength="120"');
+ if(type==='event')h+=field('postDate','dates','datetime-local',p?.date?localInput(new Date(p.date)):'');
+ if(type==='when')h+='<p class="mu">'+t('dates')+'</p>'+[0,1,2,3].map(i=>'<input class="dateOption" type="datetime-local" aria-label="'+t('dates')+' '+(i+1)+'" value="'+(p?.opts?.[i]?localInput(new Date(p.opts[i])):'')+'">').join('');
+ if(['poll','anon'].includes(type))h+=field('pollQuestion','q','text',p?.q||'','maxlength="240"')+textarea('pollOptions','opt',(p?.opts||[]).join('\n'),1000)+(type==='anon'?'<p class="mu">'+t('anonHint')+'</p>':'');
+ $('#specialFields').innerHTML=h;if(p&&['poll','anon','when'].includes(type))$('#specialFields').querySelectorAll('input,textarea').forEach(el=>el.disabled=true);
+}
+function previewImages(){const el=$('#imagePreview');if(el)el.innerHTML='<div class="grid">'+draftImages.map((v,i)=>'<div>'+image(v)+btn('removeImage','×','data-i="'+i+'" aria-label="'+t('remove')+'"')+'</div>').join('')+'</div>'}
+function localInput(d){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)}
+async function publish(id){
+ checkOnline();const type=$('#postType').value,text=$('#postText').value.trim(),existing=id?findPost(id):null;
+ const d={uid:me.id,name:me.name,type,text,ts:existing?.ts||ts(),likes:existing?.likes||[],comments:existing?.comments||[]};
+ if(draftImages.length){d.img=draftImages[0];d.imgs=draftImages.slice(1)}
+ if(type==='poll'||type==='anon'){d.q=$('#pollQuestion').value.trim();d.opts=$('#pollOptions').value.split('\n').map(x=>x.trim()).filter(Boolean);if(!d.q||d.opts.length<2||d.opts.length>8||d.opts.some(x=>x.length>120)||new Set(d.opts).size!==d.opts.length)throw Error('KROG:invalid');d.votes={}}
+ if(type==='event'){d.title=$('#postTitle').value.trim();const dt=new Date($('#postDate').value);if(!d.title||isNaN(dt.getTime()))throw Error('KROG:invalid');d.date=dt.toISOString();d.rsvp=existing?.rsvp||{}}
+ if(type==='when'){d.title=$('#postTitle').value.trim();d.opts=[...document.querySelectorAll('.dateOption')].map(x=>x.value).filter(Boolean).map(x=>new Date(x).toISOString());d.votes=existing?.votes||{};if(!d.title||d.opts.length<2||new Set(d.opts).size!==d.opts.length)throw Error('KROG:invalid')}
+ if(type==='post'&&!text&&!draftImages.length)throw Error('KROG:invalid');limitDoc(d);
+ const ref=id?db.doc('posts/'+id):db.collection('posts').doc(),batch=db.batch();
+ if(existing){const patch={text,editedAt:ts(),img:d.img||F.delete(),imgs:d.imgs||F.delete()};if(type==='event')Object.assign(patch,{title:d.title,date:d.date});batch.update(ref,patch)}
+ else{batch.set(ref,d);activity(batch,type==='event'?'event':'post',ref.id,d)}
+ await batch.commit();closeSheet();toast(t('saved'));
+}
+async function updateOwnMap(id,field,value){
+ checkOnline();await db.runTransaction(async tx=>{const ref=db.doc('posts/'+id),s=await tx.get(ref);if(!s.exists)throw Error('KROG:invalid');const d=s.data();tx.update(ref,{[field]:{...(d[field]||{}),[me.id]:value}})});
+}
+async function react(id,emoji){
+ checkOnline();await db.runTransaction(async tx=>{const ref=db.doc('posts/'+id),s=await tx.get(ref),d=s.data(),map={...(d.reactions||{})};if(map[me.id]===emoji||(!map[me.id]&&emoji==='❤️'&&(d.likes||[]).includes(me.id)))delete map[me.id];else map[me.id]=emoji;tx.update(ref,{reactions:map,likes:(d.likes||[]).filter(id=>id!==me.id)});if(map[me.id])activity(tx,'reaction',id,d,d.uid)});
+}
+async function comment(id){
+ checkOnline();const input=$('#comment_'+id),text=input.value.trim();if(!text)return;
+ await db.runTransaction(async tx=>{const ref=db.doc('posts/'+id),s=await tx.get(ref),p=s.data();if((p.comments||[]).length>=100)throw Error('KROG:limit');const d={uid:me.id,name:me.name,text,ts:ts()};limitDoc({...p,comments:[...(p.comments||[]),d]},950000);tx.update(ref,{comments:[...(p.comments||[]),d]});activity(tx,'comment',id,{text},p.uid)});
+ if(fieldDrafts[input.id]?.trim()===text)delete fieldDrafts[input.id];if(input.isConnected&&input.value.trim()===text)input.value='';render();
+}
+async function anonVote(id,i){
+ checkOnline();const ballot=db.doc('posts/'+id+'/ballots/'+me.id),counter=db.doc('posts/'+id+'/results/'+i);
+ await db.runTransaction(async tx=>{const [b,c]=await Promise.all([tx.get(ballot),tx.get(counter)]);if(b.exists)throw Error('KROG:voted');tx.set(ballot,{choice:i});tx.set(counter,{count:(c.exists?c.data().count:0)+1})});toast(t('voted'));
+}
+async function changeStatus(id,status){
+ checkOnline();if(id===me.id)return;if(status==='rejected'&&!confirm(t('confirmRemove')))return;
+ await db.runTransaction(async tx=>{const sr=db.doc('config/state'),ur=db.doc('users/'+id),[s,u]=await Promise.all([tx.get(sr),tx.get(ur)]);if(!u.exists)return;let ids=s.data().activeIds.filter(x=>x!==id);if(status==='active'){if(ids.length>=20)throw Error('KROG:full');ids.push(id)}tx.update(sr,{activeIds:ids});tx.update(ur,{status})});
+}
+async function migrate(){
+ checkOnline();const s=await db.collection('users').where('status','==','active').get();const ids=s.docs.map(d=>d.id);if(ids.length>20)throw Error('KROG:full');
+ await db.runTransaction(async tx=>{const ref=db.doc('config/state'),st=await tx.get(ref);if(st.exists)return;tx.set(ref,{adminUid:me.id,activeIds:ids})});await onAuth(auth.currentUser);
+}
+function memberProfile(id){
+ const u=users[id];if(!u)return;sheet(t('profile'),'<div class="row">'+avatar(u)+'<h3>'+esc(u.name)+'</h3></div><p>'+esc(u.bio||'')+'</p>'+(u.birthday?'<p>🎂 '+esc(u.birthday)+' '+btn('birthdayICS','📆',idattr(id))+'</p>':'')+'<h3>'+t('memberposts')+'</h3>'+posts.filter(p=>p.uid===id).map(p=>'<div class="card"><p class="line">'+esc(p.text||p.title||p.q||'')+'</p>'+image(images(p)[0])+btn('jump',t('openPost'),idattr(p.id))+'</div>').join(''));
+}
+function editProfile(){
+ profileImage=me.avatar||'';const [m='',d='']=(me.birthday||'').split('-');sheet(t('profile'),field('profileName','name','text',me.name,'maxlength="50"')+textarea('profileBio','bio',me.bio||'',240)+'<p>'+t('birthday')+'</p><div class="row">'+field('birthMonth','month','number',m,'min="1" max="12"')+field('birthDay','day','number',d,'min="1" max="31"')+'</div><div id="avatarPreview">'+image(profileImage)+'</div><label class="chip">'+t('profilephoto')+'<input id="avatarPhoto" type="file" accept="image/*" hidden></label>'+btn('removeAvatar',t('removephoto'))+btn('saveProfile',t('save'),'','cta'));
+}
+async function saveProfile(){
+ const name=$('#profileName').value.trim(),m=+$('#birthMonth').value,d=+$('#birthDay').value;if(!name||((m||d)&&(!m||!d||new Date(2000,m-1,d).getMonth()!==m-1||d<1||m<1||m>12)))throw Error('KROG:invalid');
+ const data={name,bio:$('#profileBio').value.trim(),birthday:m?String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'):'',avatar:profileImage};limitDoc(data,100000);await db.doc('users/'+me.id).update(data);closeSheet();
+}
+function storyComposer(){draftImages=[];sheet(t('story'),'<p>'+t('storyHint')+'</p>'+textarea('storyText','txt','',240)+'<label class="chip">📷<input id="storyPhoto" type="file" accept="image/*" hidden></label><div id="storyPreview"></div>'+btn('publishStory',t('send'),'','cta'))}
+async function publishStory(){checkOnline();const text=$('#storyText').value.trim();if(!text&&!draftImages.length)return;const d={uid:me.id,text,img:draftImages[0]||'',createdAt:F.serverTimestamp(),expiresAt:firebase.firestore.Timestamp.fromMillis(ts()+86400000)};limitDoc(d);await db.collection('stories').add(d);closeSheet();listenStories()}
+function storyView(id){const s=stories.find(s=>s.id===id);if(!s||s.expiresAt.toMillis()<=ts())return toast(t('storyGone'));sheet(t('story'),'<b>'+esc(nameOf(s.uid))+'</b>'+image(s.img)+'<p class="line">'+esc(s.text)+'</p>'+((s.uid===me.id||isAdmin())?btn('deleteStory',t('remove'),idattr(id)):''));sheet.expiry=setTimeout(()=>{closeSheet();toast(t('storyGone'))},Math.max(0,s.expiresAt.toMillis()-ts()))}
+function money(n){return new Intl.NumberFormat(L,{style:'currency',currency:'EUR'}).format(n/100)}
+function balances(data){
+ const bal={};for(const e of data){const ids=e.members,base=Math.floor(e.cents/ids.length),rem=e.cents%ids.length;bal[e.payer]=(bal[e.payer]||0)+e.cents;ids.forEach((uid,i)=>bal[uid]=(bal[uid]||0)-base-(i<rem?1:0))}
+ const debt=Object.entries(bal).filter(([,v])=>v<0).map(([id,v])=>({id,n:-v})),credit=Object.entries(bal).filter(([,v])=>v>0).map(([id,n])=>({id,n})),result=[];let i=0,j=0;
+ while(i<debt.length&&j<credit.length){const n=Math.min(debt[i].n,credit[j].n);result.push({from:debt[i].id,to:credit[j].id,cents:n});debt[i].n-=n;credit[j].n-=n;if(!debt[i].n)i++;if(!credit[j].n)j++}return result;
+}
+function expenseView(){
+ sheet(t('expenses'),'<p class="mu">'+t('expenseHint')+'</p>'+field('expenseTitle','expenseTitle','text','','maxlength="120"')+field('expenseAmount','amount','text','','inputmode="decimal"')+'<label class="field">'+t('paid')+'<select id="expensePayer">'+activeUsers().map(u=>'<option value="'+esc(u.id)+'" '+(u.id===me.id?'selected':'')+'>'+esc(u.name)+'</option>').join('')+'</select></label><p>'+t('forWho')+'</p><div class="checks">'+activeUsers().map(u=>'<label><input type="checkbox" class="expenseMember" value="'+esc(u.id)+'" checked>'+esc(u.name)+'</label>').join('')+'</div>'+btn('saveExpense',t('add'),'','cta')+'<h3>'+t('settle')+'</h3>'+(balances(expenses).map(x=>'<p>'+esc(nameOf(x.from))+' → '+esc(nameOf(x.to))+': <b>'+money(x.cents)+'</b></p>').join('')||'<p>'+t('balanced')+'</p>')+expenses.map(e=>'<div class="card"><b>'+esc(e.title)+'</b> · '+money(e.cents)+'<p class="mu">'+t('paid')+': '+esc(nameOf(e.payer))+'</p>'+((e.uid===me.id||isAdmin())?btn('deleteExpense',t('remove'),idattr(e.id)):'')+'</div>').join(''));
+}
+async function saveExpense(){
+ const title=$('#expenseTitle').value.trim(),raw=$('#expenseAmount').value.trim().replace(',','.'),members=[...document.querySelectorAll('.expenseMember:checked')].map(x=>x.value).sort();if(!/^\d{1,6}(\.\d{1,2})?$/.test(raw)||!title||!members.length)throw Error('KROG:invalid');
+ const cents=Math.round(Number(raw)*100);if(cents<=0)throw Error('KROG:range');await db.collection('expenses').add({uid:me.id,title,cents,payer:$('#expensePayer').value,members,ts:ts()});closeSheet();toast(t('saved'));
+}
+function listsView(){sheet(t('lists'),field('listTitle','listTitle','text','','maxlength="120"')+btn('createList',t('add'),'','cta')+lists.map(l=>'<div class="card">'+btn('openList',esc(l.title),idattr(l.id))+((l.uid===me.id||isAdmin())?btn('deleteList','×',idattr(l.id)+' aria-label="'+t('remove')+'"'):'')+'</div>').join(''))}
+function listView(id){
+ const l=lists.find(x=>x.id===id);if(!l)return;sheet(l.title,field('listItem','item','text','','maxlength="160"')+btn('addItem',t('add'),idattr(id))+'<div id="listItems"></div>');
+ sheetUnsub=db.collection('lists/'+id+'/items').orderBy('ts').onSnapshot(s=>{$('#listItems').innerHTML=docs(s).map(i=>'<div class="listitem"><input type="checkbox" data-a="checkItem" data-list="'+esc(id)+'" '+idattr(i.id)+' '+(i.done?'checked':'')+' aria-label="'+esc(i.text)+'"><span class="'+(i.done?'done':'')+'">'+esc(i.text)+'</span><select class="assignItem" data-list="'+esc(id)+'" '+idattr(i.id)+' aria-label="'+t('mentions')+'"><option value="">'+t('unassigned')+'</option>'+activeUsers().map(u=>'<option value="'+esc(u.id)+'" '+(i.assignee===u.id?'selected':'')+'>'+esc(u.name)+'</option>').join('')+'</select>'+((i.uid===me.id||isAdmin())?btn('deleteItem','×','data-list="'+esc(id)+'" '+idattr(i.id)):'')+'</div>').join('')||'<p>'+t('listEmpty')+'</p>'},fail);
+}
+function escapeICS(v){return String(v).replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,')}
+function calendar(id,birthday=false){
+ const p=birthday?users[id]:findPost(id);if(!p)return;let date,title,extra='';
+ if(birthday){const [m,d]=p.birthday.split('-').map(Number);date=new Date(new Date().getFullYear(),m-1,d,9);if(date<new Date())date.setFullYear(date.getFullYear()+1);title='🎂 '+p.name;extra='RRULE:FREQ=YEARLY\r\n'}else{date=new Date(p.date);title=p.title}
+ const fmt=d=>d.toISOString().replace(/[-:]|\.\d+/g,'');
+ const lines='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Krog//SL\r\nBEGIN:VEVENT\r\nUID:'+id+(birthday?'-birthday':'')+'@krog\r\nDTSTAMP:'+fmt(new Date())+'\r\nDTSTART:'+fmt(date)+'\r\nDTEND:'+fmt(new Date(+date+3600000))+'\r\n'+extra+'SUMMARY:'+escapeICS(title)+'\r\nBEGIN:VALARM\r\nTRIGGER:-PT1H\r\nACTION:DISPLAY\r\nDESCRIPTION:'+escapeICS(title)+'\r\nEND:VALARM\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';download('krog.ics',lines,'text/calendar;charset=utf-8');
+}
+async function sendMessage(img=''){
+ checkOnline();const input=$('#chatText'),text=input?.value.trim()||'',sentRoom=room,sentReply=rp;if(!text&&!img)return;const d={uid:me.id,name:me.name,text,ts:ts()};if(img)d.img=img;if(rp)d.rp=rp.text?.slice(0,500)||'📷';limitDoc(d);await db.collection('rooms/'+sentRoom+'/msgs').add(d);if(chatDrafts[sentRoom]?.trim()===text)delete chatDrafts[sentRoom];if(room===sentRoom&&input?.isConnected&&input.value.trim()===text)input.value='';if(rp===sentReply)rp=null;render();
+}
+async function newCode(){
+ const code=randomCode(),batch=db.batch();if(cfg.code)batch.delete(db.doc('invites/'+cfg.code));batch.set(db.doc('config/app'),{code});batch.set(db.doc('invites/'+code),{enabled:true});await batch.commit();
+}
+async function exportArchive(){
+ toast(t('archiveBusy'));const data={version:2,exportedAt:new Date().toISOString()};
+ async function all(q){let result=[],cursor=null;for(;;){const s=await(cursor?q.orderBy(firebase.firestore.FieldPath.documentId()).startAfter(cursor).limit(100):q.orderBy(firebase.firestore.FieldPath.documentId()).limit(100)).get();result.push(...docs(s));if(s.size<100)break;cursor=s.docs.at(-1)}return result}
+ for(const c of ['users','posts','expenses','lists'])data[c]=await all(db.collection(c));
+ data.groupMessages=await all(db.collection('rooms/all/msgs'));data.listItems={};for(const l of data.lists)data.listItems[l.id]=await all(db.collection('lists/'+l.id+'/items'));
+ data.anonymousResults={};for(const p of data.posts.filter(x=>x.type==='anon'))data.anonymousResults[p.id]=await all(db.collection('posts/'+p.id+'/results'));
+ // Invitation secrets never belong in a shareable archive.
+ data.users=data.users.map(({code,...u})=>u);download('krog-'+dayKey()+'.json',JSON.stringify(data,null,2),'application/json');
+}
+const pendingActions=new Set();
+const A={
+close:closeSheet,toli:()=>authUI('li'),tosu:()=>authUI('su'),
+login:()=>auth.signInWithEmailAndPassword($('#ae').value.trim(),$('#ap').value),
+signup:async()=>{const name=$('#an').value,code=$('#ac').value,email=$('#ae').value.trim(),pw=$('#ap').value;if(!name.trim())throw Error('KROG:invalid');await auth.createUserWithEmailAndPassword(email,pw);await join(name,code)},
+finish:()=>join($('#an').value,$('#ac').value),
+google:async()=>{const p=new firebase.auth.GoogleAuthProvider();try{await auth.signInWithPopup(p)}catch(e){if(['auth/popup-blocked','auth/operation-not-supported-in-this-environment'].includes(e.code))await auth.signInWithRedirect(p);else throw e}},
+reset:async()=>{const email=$('#ae').value.trim();if(!email)throw Error('KROG:invalid');await auth.sendPasswordResetEmail(email);toast(t('resetSent'))},
+logout:()=>auth.signOut(),migrate,
+lang:()=>{L=L==='sl'?'en':'sl';store.set('l',L);document.documentElement.lang=L;closeSheet();if(started)shell();else if(authUser)finishUI();else authUI()},
+theme:()=>{th=th==='dark'?'light':'dark';store.set('th',th);document.documentElement.dataset.t=th;render()},
+tab:el=>{tab=el.dataset.k;render()},new:()=>composer(),publish:(el,id)=>publish(id),
+more:()=>{postLimit+=40;loadPosts()},search:()=>{search=$('#search').value;render()},
+postMenu:(el,id)=>{const p=findPost(id);sheet(t('post'),(p.uid===me.id?btn('editPost',t('edit'),idattr(id)):'')+(isAdmin()?btn('pin',t('pin'),idattr(id)):'')+btn('deletePost',t('remove'),idattr(id)))},
+editPost:(el,id)=>composer(findPost(id)),
+deletePost:async(el,id)=>{if(confirm(t('del'))){await db.doc('posts/'+id).delete();closeSheet()}},
+pin:async(el,id)=>{await db.doc('posts/'+id).update({pinned:!findPost(id).pinned});closeSheet()},
+removeImage:el=>{draftImages.splice(+el.dataset.i,1);previewImages()},
+react:(el,id)=>react(id,el.dataset.e),vote:(el,id)=>updateOwnMap(id,'votes',+el.dataset.i),anonVote:(el,id)=>anonVote(id,+el.dataset.i),
+rsvp:(el,id)=>updateOwnMap(id,'rsvp',el.dataset.v),
+free:async(el,id)=>{checkOnline();await db.runTransaction(async tx=>{const ref=db.doc('posts/'+id),s=await tx.get(ref),v=s.data().votes||{},mine=v[me.id]||[],i=+el.dataset.i;tx.update(ref,{votes:{...v,[me.id]:mine.includes(i)?mine.filter(x=>x!==i):[...mine,i]}})})},
+comments:(el,id)=>{expanded.has(id)?expanded.delete(id):expanded.add(id);render()},comment:(el,id)=>comment(id),
+zoom:(el,id)=>sheet(t('photo'),image(images(findPost(id))[+el.dataset.i])),
+profile:(el,id)=>memberProfile(id),editProfile,saveProfile,
+removeAvatar:()=>{profileImage='';$('#avatarPreview').innerHTML=''},
+answer:async()=>{const text=$('#dailyAnswer').value.trim();if(!text)return;await db.doc('daily/'+dayKey()+'/answers/'+me.id).set({text,ts:ts()});toast(t('saved'))},
+customDaily:()=>sheet(t('customDaily'),field('questionSL','questionSL','text',cfg.daily?.sl||'','maxlength="240" lang="sl"')+field('questionEN','questionEN','text',cfg.daily?.en||'','maxlength="240" lang="en"')+btn('saveDaily',t('save'),'','cta')),
+saveDaily:async()=>{const sl=$('#questionSL').value.trim(),en=$('#questionEN').value.trim();if(!sl||!en)throw Error('KROG:invalid');await db.doc('config/daily').set({day:dayKey(),sl,en});closeSheet()},
+storyNew:storyComposer,publishStory,storyView:(el,id)=>storyView(id),
+deleteStory:async(el,id)=>{if(confirm(t('del'))){await db.doc('stories/'+id).delete();closeSheet()}},
+cleanup:async()=>{const s=await db.collection('stories').where('expiresAt','<=',firebase.firestore.Timestamp.now()).limit(100).get();const b=db.batch();s.docs.forEach(d=>b.delete(d.ref));await b.commit();toast(t('saved'))},
+expenses:expenseView,saveExpense,deleteExpense:async(el,id)=>{if(confirm(t('del'))){await db.doc('expenses/'+id).delete();closeSheet()}},
+lists:listsView,
+createList:async()=>{const title=$('#listTitle').value.trim();if(!title)return;await db.collection('lists').add({uid:me.id,title,ts:ts()});closeSheet()},
+openList:(el,id)=>listView(id),
+deleteList:async(el,id)=>{if(confirm(t('del'))){const s=await db.collection('lists/'+id+'/items').get();for(let i=0;i<s.docs.length;i+=400){const b=db.batch();s.docs.slice(i,i+400).forEach(d=>b.delete(d.ref));await b.commit()}await db.doc('lists/'+id).delete();closeSheet()}},
+addItem:async(el,id)=>{const input=$('#listItem'),text=input.value.trim();if(!text)return;await db.collection('lists/'+id+'/items').add({uid:me.id,text,done:false,assignee:'',ts:ts()});input.value=''},
+checkItem:(el,id)=>db.doc('lists/'+el.dataset.list+'/items/'+id).update({done:el.checked}),
+deleteItem:(el,id)=>db.doc('lists/'+el.dataset.list+'/items/'+id).delete(),
+ics:(el,id)=>calendar(id),birthdayICS:(el,id)=>calendar(id,true),
+notifications:()=>{sheet(t('bell'),'<p class="mu">'+t('notificationHint')+'</p>'+btn('readall',t('readall'))+notifications().map(n=>'<div class="card '+(n.ts>readAt('notifications')?'newdot':'')+'">'+btn('jump',esc(nameOf(n.actor))+' · '+t((n.mentions||[]).includes(me.id)?'mention':({post:'newpost',event:'newevent',comment:'newcomment',reaction:'newreaction'}[n.kind]))+'<p>'+esc(n.text)+'</p><small>'+ago(n.ts)+'</small>',idattr(n.ref))+'</div>').join(''))},
+readall:()=>{store.set(key('notifications'),Math.max(ts(),...activities.map(a=>a.ts)));closeSheet();updateBadges()},
+jump:async(el,id)=>{closeSheet();if(!posts.some(p=>p.id===id)){const s=await db.doc('posts/'+id).get();if(!s.exists)return toast(t('noresults'));posts.push({...s.data(),id})}tab='home';search='';render();document.getElementById('post_'+id)?.scrollIntoView({block:'center'})},
+room:async el=>{const r=el.dataset.room;if(r!=='all'){const ref=db.doc('rooms/'+r);const s=await ref.get();if(!s.exists)await ref.set({members:[me.id,el.dataset.id].sort()})}room=r;rp=null;listenRoom();render()},
+sendMessage:()=>sendMessage(),reply:(el,id)=>{rp=messages.find(m=>m.id===id);render();$('#chatText')?.focus()},
+msgReact:(el,id)=>db.doc('rooms/'+room+'/msgs/'+id).update({['re.'+me.id]:el.dataset.e}),
+approve:(el,id)=>changeStatus(id,'active'),reject:(el,id)=>changeStatus(id,'rejected'),newCode,
+copyCode:async()=>{await navigator.clipboard.writeText(cfg.code);toast(t('cp'))},
+onboard:async()=>{await db.doc('users/'+me.id).update({onboarded:true});closeSheet()},export:()=>{sheet(t('export'),'<p>'+t('exportHint')+'</p>'+btn('confirmExport',t('export'),'','cta'))},confirmExport:exportArchive,
+install:async()=>{if(ip){await ip.prompt();ip=null}else sheet(t('inst'),'<p>'+t('ih')+'</p>')}
+};
+document.addEventListener('click',async e=>{
+ const el=e.target.closest('[data-a]');if(!el||el.disabled)return;const fn=A[el.dataset.a];if(!fn)return;const lock=el.dataset.a+':'+(el.dataset.id||'');if(pendingActions.has(lock))return;pendingActions.add(lock);
+ el.disabled=true;const timer=setTimeout(()=>{if(el.isConnected)toast(t('sync'))},10000);
+ try{await fn(el,el.dataset.id,e)}catch(err){fail(err)}finally{clearTimeout(timer);pendingActions.delete(lock);el.disabled=false}
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape')closeSheet();
+ if(e.key==='Tab'&&$('.sheet')){const nodes=[...$('.sheet').querySelectorAll('button,input,textarea,select,[tabindex]')].filter(n=>!n.disabled&&n.offsetParent!==null),a=nodes[0],z=nodes.at(-1);if(e.shiftKey&&document.activeElement===a){e.preventDefault();z?.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a?.focus()}}
+ if(e.key!=='Enter'||e.shiftKey||e.isComposing)return;
+ const id=e.target.id;if(id==='search'){e.preventDefault();A.search()}else if(id==='chatText'){e.preventDefault();$('#cb [data-a="sendMessage"]').click()}else if(['ae','ap','ac'].includes(id)){e.preventDefault();document.querySelector('[data-a=login],[data-a=signup],[data-a=finish]')?.click()}else if(id?.startsWith('comment_')){e.preventDefault();e.target.parentElement.querySelector('button').click()}
+});
+document.addEventListener('input',e=>{if(e.target.id==='chatText')chatDrafts[room]=e.target.value;else if(e.target.id&&$('#main')?.contains(e.target))fieldDrafts[e.target.id]=e.target.value});
+document.addEventListener('focusout',()=>{if(render.dirty)setTimeout(()=>scheduleRender(),50)});
+document.addEventListener('change',async e=>{
+ const el=e.target;try{
+ if(el.id==='postType')composerFields();
+ if(el.id==='mentionPick'&&el.value){$('#postText').value+=' @'+el.value+' ';el.value=''}
+ if(el.matches('.assignItem'))await db.doc('lists/'+el.dataset.list+'/items/'+el.dataset.id).update({assignee:el.value});
+ if(!el.files?.length)return;el.disabled=true;
+ if(el.id==='postPhotos'){const files=[...el.files];if(files.length+draftImages.length>3)throw Error('KROG:big');const im=await Promise.all(files.map(f=>shrink(f)));limitDoc([...draftImages,...im],700000);draftImages.push(...im);previewImages()}
+ if(el.id==='avatarPhoto'){profileImage=await shrink(el.files[0],256);limitDoc(profileImage,85000);$('#avatarPreview').innerHTML=image(profileImage)}
+ if(el.id==='storyPhoto'){draftImages=[await shrink(el.files[0])];$('#storyPreview').innerHTML=image(draftImages[0])}
+ if(el.id==='chatPhoto')await sendMessage(await shrink(el.files[0]));
+ el.value='';
+ }catch(err){fail(err)}finally{el.disabled=false}
+});
+addEventListener('online',()=>{scheduleRender();if(started)listenStories()});addEventListener('offline',scheduleRender);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&started){listenStories();listenDaily();scheduleRender()}});
+setInterval(()=>{if(started&&!document.hidden){stories=stories.filter(s=>s.expiresAt?.toMillis()>ts());listenDaily();if(ts()-storyFloor>300000)listenStories();scheduleRender()}},30000);
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+try{firebase.initializeApp(FB);auth=firebase.auth();db=firebase.firestore();F=firebase.firestore.FieldValue;auth.onAuthStateChanged(onAuth);auth.getRedirectResult().catch(fail)}catch(e){$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('error')+'</p>'+btn('reload',t('retry'))+'</div>';A.reload=()=>location.reload()}
 </script></body></html>
