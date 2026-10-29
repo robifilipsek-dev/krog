@@ -297,15 +297,9 @@ async function route(token){
  if(opening===pick)return;
  await openGroup(pick,token);
 }
-// Accounts created before groups existed have no gids field.
+// Accounts created before groups existed have no gids field: start them with an empty list.
 async function legacyFlow(token){
- let ls=null;try{const s=await raw.doc('config/state').get();ls=s.exists?s.data():null}catch{}
  if(token!==session)return;
- if(ls&&Array.isArray(ls.activeIds)&&ls.activeIds.includes(me.id)){
-  if(ls.migratedTo){await db.doc('users/'+me.id).update({gids:F.arrayUnion(ls.migratedTo)});return}
-  if(ls.adminUid===me.id){$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('migrateHint')+'</p>'+btn('migrate',t('migrate'),'','cta')+btn('logout',t('out'))+'</div>';return}
-  $('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('migrationRequired')+'</p>'+btn('logout',t('out'))+'</div>';return;
- }
  await db.doc('users/'+me.id).update({gids:[]});
 }
 function noGroupsUI(){
@@ -491,47 +485,6 @@ async function removeMember(id){
  const g=gid;
  await db.runTransaction(async tx=>{const sr=db.doc('groups/'+g),s=await tx.get(sr);tx.update(sr,{activeIds:s.data().activeIds.filter(x=>x!==id)});tx.delete(db.doc('groups/'+g+'/members/'+id))});
 }
-async function copyLegacy(src,dst,each,skipped){
- let cursor=null,pend=[],bytes=0;
- const flush=async()=>{
-  if(!pend.length)return;const items=pend;pend=[];bytes=0;
-  try{const b=db.batch();items.forEach(([ref,data])=>b.set(ref,data));await b.commit()}
-  catch(e){if(e.code!=='permission-denied')throw e;
-   for(const [ref,data] of items){try{await ref.set(data)}catch(err){if(err.code!=='permission-denied')throw err;skipped?.push(ref.path)}}}
- };
- for(;;){
-  let q=raw.collection(src).orderBy(firebase.firestore.FieldPath.documentId());if(cursor)q=q.startAfter(cursor);
-  const s=await q.limit(50).get();
-  for(const d of s.docs){const data=d.data(),size=JSON.stringify(data).length;if(pend.length&&(pend.length>=400||bytes+size>5e6))await flush();pend.push([db.doc(dst+'/'+d.id),data]);bytes+=size}
-  await flush();
-  if(each)for(const d of s.docs)await each(d);
-  if(s.size<50)break;cursor=s.docs.at(-1);
- }
-}
-// One-time move of the pre-groups circle (top-level collections) into groups/{id}. Old data is left untouched.
-async function migrateLegacy(){
- checkOnline();const step=async(n,f)=>{try{return await f()}catch(e){e.step=n;throw e}},skipped=[];
- const ls=await step('state',async()=>{const ss=await raw.doc('config/state').get();if(!ss.exists||ss.data().adminUid!==me.id)throw Error('KROG:denied');return ss.data()});
- const g='krog-'+me.id.slice(0,10).toLowerCase(),base='groups/'+g+'/';
- const oldCode=await step('code',async()=>(await raw.doc('config/app').get()).data()?.code||randomCode());
- toast(t('archiveBusy'));
- const profiles=await step('users',()=>Promise.all(ls.activeIds.map(id=>raw.doc('users/'+id).get())));
- await step('group',async()=>{
-  const b=db.batch();
-  b.set(db.doc('groups/'+g),{name:'Krog',adminUid:me.id,activeIds:ls.activeIds,ts:ts()});
-  b.set(db.doc(base+'private/app'),{code:oldCode});
-  b.set(db.doc('invites/'+oldCode),{gid:g,name:'Krog',enabled:true});
-  profiles.forEach(p=>{if(p.exists)b.set(db.doc(base+'members/'+p.id),memberData(p.data()))});
-  await b.commit();
- });
- await step('posts',()=>copyLegacy('posts',base+'posts',async d=>{if(d.data().type==='anon')await copyLegacy('posts/'+d.id+'/results',base+'posts/'+d.id+'/results',null,skipped)},skipped));
- await step('expenses',()=>copyLegacy('expenses',base+'expenses',null,skipped));
- await step('lists',()=>copyLegacy('lists',base+'lists',d=>copyLegacy('lists/'+d.id+'/items',base+'lists/'+d.id+'/items',null,skipped),skipped));
- await step('chat',()=>copyLegacy('rooms/all/msgs',base+'rooms/all/msgs',null,skipped));
- await step('finish',async()=>{const b2=db.batch();b2.update(raw.doc('config/state'),{migratedTo:g});b2.update(db.doc('users/'+me.id),{gids:F.arrayUnion(g)});await b2.commit()});
- if(skipped.length){console.warn('skipped',skipped);toast(t('skipped')+skipped.length)}
- return g;
-}
 function memberProfile(id){
  const u=users[id];if(!u)return;sheet(t('profile'),'<div class="row">'+avatar(u)+'<h3>'+esc(u.name)+'</h3></div><p>'+esc(u.bio||'')+'</p>'+(u.birthday?'<p>🎂 '+esc(u.birthday)+' '+btn('birthdayICS','📆',idattr(id))+'</p>':'')+'<h3>'+t('memberposts')+'</h3>'+posts.filter(p=>p.uid===id).map(p=>'<div class="card"><p class="line">'+esc(p.text||p.title||p.q||'')+'</p>'+image(images(p)[0])+btn('jump',t('openPost'),idattr(p.id))+'</div>').join(''));
 }
@@ -597,7 +550,7 @@ signup:()=>{const name=$('#an').value,code=$('#ac').value,email=$('#ae').value.t
 finish:()=>{const name=$('#an').value,code=$('#ac').value;return runJoining(async()=>{await createProfile(name);return code.trim()?joinWithCode(code):null})},
 google:async()=>{const p=new firebase.auth.GoogleAuthProvider();try{await auth.signInWithPopup(p)}catch(e){if(['auth/popup-blocked','auth/operation-not-supported-in-this-environment'].includes(e.code))await auth.signInWithRedirect(p);else throw e}},
 reset:async()=>{const email=$('#ae').value.trim();if(!email)throw Error('KROG:invalid');await auth.sendPasswordResetEmail(email);toast(t('resetSent'))},
-logout:()=>auth.signOut(),migrate:()=>runJoining(migrateLegacy),
+logout:()=>auth.signOut(),
 lang:()=>{L=L==='sl'?'en':'sl';store.set('l',L);document.documentElement.lang=L;closeSheet();if(started)shell();else if(authUser&&me)route(session);else if(authUser)finishUI();else authUI()},
 theme:()=>{th=th==='dark'?'light':'dark';store.set('th',th);document.documentElement.dataset.t=th;render()},
 tab:el=>{tab=el.dataset.k;render()},new:()=>composer(),publish:(el,id)=>publish(id),
