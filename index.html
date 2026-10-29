@@ -202,7 +202,7 @@ const ICON={
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 function updateInstall(){const b=$('#installBtn');if(b)b.hidden=!ip||isStandalone()}
 function toast(m){$('#toast').textContent=m;$('#toast').style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').style.opacity=0,3800)}
-function fail(e){console.warn(e?.step,e?.code||e?.message||e);const m=e?.message?.startsWith('KROG:')?t(e.message.slice(5)):e?.code==='permission-denied'?t('denied'):e?.code?.startsWith('auth/')?t('autherror'):t('error');toast(m+(e?.step?' ['+e.step+']':''))}
+function fail(e){console.warn(e?.step,e?.code||e?.message||e);const m=e?.message?.startsWith('KROG:')?t(e.message.slice(5)):e?.code==='permission-denied'?t('denied'):e?.code?.startsWith('auth/')?t('autherror'):t('error');toast(m+(e?.step?' ['+e.step+']':'')+(m===t('error')?' ('+(e?.code||e?.name||'?')+')':''))}
 function checkOnline(){if(!navigator.onLine)throw Error('KROG:offline')}
 function limitDoc(d,max=800000){if(new TextEncoder().encode(JSON.stringify(d)).length>max)throw Error('KROG:big')}
 function avatar(u={}){const c=COLORS.includes(u.color)?u.color:'#2f5bff';return '<div class="av" style="background:'+c+'">'+(imageOK(u.avatar)?'<img alt="" src="'+u.avatar+'">':esc((u.name||'?')[0].toUpperCase()))+'</div>'}
@@ -333,7 +333,7 @@ function subscribe(){
  stream(db.collection('groups/'+g+'/members'),s=>{users=Object.fromEntries(docs(s).map(u=>[u.id,u]))});
  if(isAdmin())stream(db.doc('groups/'+g+'/private/app'),s=>cfg={...cfg,...(s.data()||{})});
  stream(db.doc('groups/'+g+'/meta/daily'),s=>cfg.daily=s.data()||{});
- stream(db.collection('posts').where('type','==','event').where('date','>=',dayKey()).orderBy('date').limit(50),s=>events=docs(s));
+ stream(db.collection('posts').where('date','>=',dayKey()).orderBy('date').limit(50),s=>events=docs(s).filter(p=>p.type==='event'));
  stream(db.collection('posts').where('pinned','==',true).limit(10),s=>pinnedPosts=docs(s));
  loadMemories();loadPosts();unsubs.push(()=>postsUnsub?.());
  stream(db.collection('expenses').orderBy('ts','desc'),s=>expenses=docs(s));
