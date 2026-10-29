@@ -202,6 +202,7 @@ const ICON={
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 function updateInstall(){const b=$('#installBtn');if(b)b.hidden=!ip||isStandalone()}
 function toast(m){$('#toast').textContent=m;$('#toast').style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').style.opacity=0,3800)}
+function quiet(e){console.warn('[background]',e?.step,e?.code||e?.message||e)}
 function fail(e){console.warn(e?.step,e?.code||e?.message||e);const m=e?.message?.startsWith('KROG:')?t(e.message.slice(5)):e?.code==='permission-denied'?t('denied'):e?.code?.startsWith('auth/')?t('autherror'):t('error');toast(m+(e?.step?' ['+e.step+']':'')+(m===t('error')?' ('+(e?.code||e?.name||'?')+')':''))}
 function checkOnline(){if(!navigator.onLine)throw Error('KROG:offline')}
 function limitDoc(d,max=800000){if(new TextEncoder().encode(JSON.stringify(d)).length>max)throw Error('KROG:big')}
@@ -323,13 +324,13 @@ async function onAuth(u){
 function shell(){
  $('#app').innerHTML='<header><i></i>Krog<span style="flex:1"></span>'+btn('groups','<span id="groupName"></span><span aria-hidden="true">▾</span>','aria-label="'+t('groups')+'"','chip groupbtn')+btn('notifications',ICON.bell+'<span id="bellCount" class="badge" hidden></span>','aria-label="'+t('bell')+'"','iconbtn')+btn('install',ICON.install,'id="installBtn" hidden aria-label="'+t('inst')+'"','iconbtn')+'</header><div class="status" id="status" role="status"></div><main id="main"></main><div id="cb"></div><nav>'+[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,e])=>btn('tab','<b>'+e+'</b>'+t(k)+'<i id="badge_'+k+'" hidden></i>','data-k="'+k+'"','')).join('')+'</nav>'+btn('new','＋','aria-label="'+t('post')+'" id="fab"','fab');render();
 }
-function stream(query,assign){unsubs.push(query.onSnapshot(s=>{assign(s);scheduleRender()},fail))}
+function stream(query,assign){unsubs.push(query.onSnapshot(s=>{assign(s);scheduleRender()},quiet))}
 function docs(s){return s.docs.map(d=>({...d.data(),id:d.id}))}
 let postsUnsub=null;
-function loadPosts(){postsUnsub?.();postsUnsub=db.collection('posts').orderBy('ts','desc').limit(postLimit).onSnapshot(s=>{posts=docs(s);scheduleRender()},fail)}
+function loadPosts(){postsUnsub?.();postsUnsub=db.collection('posts').orderBy('ts','desc').limit(postLimit).onSnapshot(s=>{posts=docs(s);scheduleRender()},quiet)}
 function subscribe(){
  const g=gid;
- unsubs.push(db.doc('groups/'+g).onSnapshot(s=>{if(!s.exists||!s.data().activeIds.includes(me.id)){removedFromGroup(g);return}state=s.data();scheduleRender()},e=>{if(e.code==='permission-denied')removedFromGroup(g);else fail(e)}));
+ unsubs.push(db.doc('groups/'+g).onSnapshot(s=>{if(!s.exists||!s.data().activeIds.includes(me.id)){removedFromGroup(g);return}state=s.data();scheduleRender()},e=>{if(e.code==='permission-denied')removedFromGroup(g);else quiet(e)}));
  stream(db.collection('groups/'+g+'/members'),s=>{users=Object.fromEntries(docs(s).map(u=>[u.id,u]))});
  if(isAdmin())stream(db.doc('groups/'+g+'/private/app'),s=>cfg={...cfg,...(s.data()||{})});
  stream(db.doc('groups/'+g+'/meta/daily'),s=>cfg.daily=s.data()||{});
@@ -344,22 +345,22 @@ function subscribe(){
 let storyUnsub=null,storyFloor=0;
 async function listenStories(){
  storyFloor=ts();const token=session;
- try{const s=await db.collection('stories').where('expiresAt','>',firebase.firestore.Timestamp.fromMillis(storyFloor+60000)).orderBy('expiresAt','desc').limit(40).get();if(token!==session||!started)return;stories=docs(s);scheduleRender()}catch(e){fail(e)}
+ try{const s=await db.collection('stories').where('expiresAt','>',firebase.firestore.Timestamp.fromMillis(storyFloor+60000)).orderBy('expiresAt','desc').limit(40).get();if(token!==session||!started)return;stories=docs(s);scheduleRender()}catch(e){quiet(e)}
 }
 function stopStories(){storyUnsub?.();storyUnsub=null}
 function listenRoom(){
- roomUnsub?.();messages=[];roomUnsub=db.collection('rooms/'+room+'/msgs').orderBy('ts','desc').limit(100).onSnapshot(s=>{messages=docs(s).reverse();scheduleRender()},fail);
+ roomUnsub?.();messages=[];roomUnsub=db.collection('rooms/'+room+'/msgs').orderBy('ts','desc').limit(100).onSnapshot(s=>{messages=docs(s).reverse();scheduleRender()},quiet);
 }
 async function loadMemories(){
  const today=new Date(),day=dayKey();if(memoryDay===day)return;memoryDay=day;const token=session;
  try{const first=await db.collection('posts').orderBy('ts').limit(1).get();if(first.empty)return;const firstYear=new Date(first.docs[0].data().ts).getFullYear(),found=[];
  for(let year=today.getFullYear()-1;year>=Math.max(firstYear,today.getFullYear()-5);year--){const start=new Date(year,today.getMonth(),today.getDate());if(start.getMonth()!==today.getMonth())continue;const end=new Date(year,today.getMonth(),today.getDate()+1);const s=await db.collection('posts').where('ts','>=',+start).where('ts','<',+end).orderBy('ts','desc').limit(3).get();found.push(...docs(s))}
- if(token===session){memories=found;scheduleRender()}}catch(e){memoryDay='';fail(e)}
+ if(token===session){memories=found;scheduleRender()}}catch(e){memoryDay='';quiet(e)}
 }
 let dailyKey='';
 function listenDaily(){
  const d=dayKey();if(dailyKey===d&&dailyReplies[d])return;dailyKey=d;loadMemories();
- extrasUnsubs.push(db.collection('daily/'+d+'/answers').onSnapshot(s=>{dailyReplies[d]=docs(s);scheduleRender()},fail));
+ extrasUnsubs.push(db.collection('daily/'+d+'/answers').onSnapshot(s=>{dailyReplies[d]=docs(s);scheduleRender()},quiet));
 }
 function scheduleRender(){if(renderPending)return;renderPending=true;requestAnimationFrame(()=>{renderPending=false;if(document.activeElement?.matches('#main input,#main textarea,#main select')){render.dirty=true;updateBadges();return}render()})}
 function updateBadges(){
@@ -388,8 +389,8 @@ function rituals(){
 function upcoming(){return [...new Map([...events,...posts].map(p=>[p.id,p])).values()].filter(p=>p.type==='event'&&new Date(p.date)>=new Date()).sort((a,b)=>new Date(a.date)-new Date(b.date))}
 function ensureAnon(p){
  if(counts[p.id])return;counts[p.id]={};
- extrasUnsubs.push(db.collection('posts/'+p.id+'/results').onSnapshot(s=>{counts[p.id]=Object.fromEntries(s.docs.map(d=>[d.id,d.data().count]));scheduleRender()},fail));
- extrasUnsubs.push(db.doc('posts/'+p.id+'/ballots/'+me.id).onSnapshot(s=>{ballots[p.id]=s.exists?s.data().choice:null;scheduleRender()},fail));
+ extrasUnsubs.push(db.collection('posts/'+p.id+'/results').onSnapshot(s=>{counts[p.id]=Object.fromEntries(s.docs.map(d=>[d.id,d.data().count]));scheduleRender()},quiet));
+ extrasUnsubs.push(db.doc('posts/'+p.id+'/ballots/'+me.id).onSnapshot(s=>{ballots[p.id]=s.exists?s.data().choice:null;scheduleRender()},quiet));
 }
 function card(p){
  const u=users[p.uid]||{name:p.name,id:p.uid},id=p.id,own=p.uid===me.id,comments=p.comments||[];
@@ -639,7 +640,7 @@ addEventListener('online',()=>{scheduleRender();if(started)listenStories()});add
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&started){listenStories();listenDaily();scheduleRender()}});
 setInterval(()=>{if(started&&!document.hidden){stories=stories.filter(s=>s.expiresAt?.toMillis()>ts());listenDaily();if(ts()-storyFloor>300000)listenStories();scheduleRender()}},30000);
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();ip=e;updateInstall()});addEventListener('appinstalled',()=>{ip=null;updateInstall()});
-addEventListener('error',e=>{console.error(e.error||e.message);toast('⚠ '+(e.message||'error').slice(0,120))});addEventListener('unhandledrejection',e=>{console.error(e.reason);if(!e.reason?.code&&!String(e.reason?.message||'').startsWith('KROG:'))toast('⚠ '+String(e.reason?.message||e.reason).slice(0,120))});
+addEventListener('error',e=>{console.error(e.error||e.message)});addEventListener('unhandledrejection',e=>{console.error(e.reason)});
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 try{firebase.initializeApp(FB);auth=firebase.auth();raw=firebase.firestore();db=scopedDb(raw);F=firebase.firestore.FieldValue;auth.onAuthStateChanged(onAuth);auth.getRedirectResult().catch(fail)}catch(e){console.error(e);$('#app').innerHTML='<div class="auth"><h1>Krog</h1><p>'+t('error')+'</p><p class="mu">'+esc((e?.name||'Error')+': '+(e?.message||e))+'</p>'+btn('reload',t('retry'))+'</div>';A.reload=()=>location.reload()}
 </script></body></html>
