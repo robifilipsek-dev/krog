@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="sl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f5bff">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Krog">
+<title>Krog</title>
+<link rel="icon" id="fav"><link rel="apple-touch-icon" id="ati"><link rel="manifest" id="mf">
+<style>
+:root{--bg:#eef0ea;--card:#fff;--tx:#17232b;--mu:#6b7780;--ac:#2f5bff;--y:#ffd84d;--bd:#dfe3da;--in:#e8ebe3}
+[data-t=dark]{--bg:#0e1116;--card:#171b22;--tx:#eaedf2;--mu:#8a94a1;--ac:#6f8bff;--bd:#252b35;--in:#222833}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font:15px/1.45 "Avenir Next","Segoe UI Variable",system-ui,sans-serif;background:var(--bg);color:var(--tx);padding-top:env(safe-area-inset-top)}
+button,input,textarea{font:inherit;color:inherit}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:640px;margin:auto}
+header{display:flex;align-items:center;gap:8px;padding:12px 18px 6px;font-weight:800;font-size:24px;letter-spacing:-.5px}
+header i{width:20px;height:20px;border:4px solid var(--ac);border-radius:50%;position:relative}
+header i:after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:var(--y);right:-6px;top:-5px}
+main{flex:1;overflow-y:auto;padding:4px 14px 90px}
+nav{display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:0;padding:8px 0 6px;color:var(--mu);font-size:11px;position:relative;cursor:pointer}
+nav button b{display:block;font-size:21px;font-weight:400}
+nav button.on{color:var(--ac);font-weight:700}
+nav i{position:absolute;top:3px;left:55%;background:var(--y);color:#17232b;font-style:normal;font-size:10px;font-weight:700;border-radius:9px;padding:0 6px}
+.card{background:var(--card);border-radius:22px;padding:14px;margin:10px 0}
+.row{display:flex;align-items:center;gap:10px}
+.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;flex:none}
+.mu{color:var(--mu);font-size:12.5px}
+.ph{width:100%;border-radius:14px;margin-top:10px;display:block}
+.act{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.act button,.chip{background:var(--in);border:0;border-radius:20px;padding:7px 13px;cursor:pointer;font-size:13px}
+.act button.on{background:var(--y);color:#17232b;font-weight:600}
+.chip.on{background:var(--ac);color:#fff}
+.bar{position:relative;background:var(--in);border-radius:12px;margin-top:6px;overflow:hidden;cursor:pointer;padding:9px 12px}
+.bar u{position:absolute;inset:0 auto 0 0;background:var(--y);opacity:.55}
+.bar p{position:relative;display:flex;justify-content:space-between}
+.cm{margin-top:8px;font-size:14px}
+input,textarea{width:100%;background:var(--in);border:0;border-radius:14px;padding:12px 14px;outline:0}
+input:focus,textarea:focus{box-shadow:0 0 0 2px var(--ac)}
+.cta{background:var(--ac);color:#fff;border:0;border-radius:16px;padding:13px;font-weight:700;width:100%;cursor:pointer}
+.fab{position:fixed;right:max(16px,calc(50% - 304px));bottom:calc(74px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;font-size:28px;border:0;color:#17232b;background:var(--y);box-shadow:0 6px 18px #0003;cursor:pointer}
+.sheet{position:fixed;inset:0;background:#0008;display:flex;align-items:flex-end;justify-content:center;z-index:9}
+.sheet>div{background:var(--card);width:100%;max-width:640px;border-radius:26px 26px 0 0;padding:16px;max-height:92%;overflow:auto;display:flex;flex-direction:column;gap:10px}
+.msg{display:flex;flex-direction:column;max-width:80%;margin:5px 0}.msg.me{align-self:flex-end;align-items:flex-end;margin-left:auto}
+.msg p{background:var(--card);padding:8px 13px;border-radius:18px;word-break:break-word}
+.me p{background:var(--ac);color:#fff}
+#cb{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 14px}
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.gal img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer}
+#toast{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:#17232be6;color:#fff;padding:9px 18px;border-radius:20px;opacity:0;transition:.25s;pointer-events:none;z-index:20;max-width:90%;text-align:center}
+.auth{padding:56px 24px;display:flex;flex-direction:column;gap:12px;max-width:420px;margin:auto}
+.auth h1{font-size:42px;letter-spacing:-1px}
+</style></head><body>
+<div id="app"></div><div id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// ====== 1) VSTAVI SVOJ FIREBASE CONFIG (Project settings > Your apps > Web) ======
+const FB={apiKey:"",authDomain:"",projectId:"",appId:""};
+// =================================================================================
+let auth,db,F,ok=1;try{firebase.initializeApp(FB);auth=firebase.auth();db=firebase.firestore();F=firebase.firestore.FieldValue}catch(x){ok=0}
+const S={home:'Domov|Home',ev:'Dogodki|Events',chat:'Klepet|Chat',gal:'Galerija|Gallery',me:'Jaz|Me',
+post:'Objava|Post',poll:'Anketa|Poll',event:'Dogodek|Event',txt:'Kaj je novega?|What\'s new?',q:'Vprašanje|Question',opt:'Možnost|Option',
+evt:'Naslov dogodka|Event title',photo:'📷 Fotografija|📷 Photo',send:'Objavi|Post',yes:'Pridem|Going',no:'Ne pridem|Can\'t make it',
+msg:'Sporočilo…|Message…',empty:'Še ni ničesar. Bodi prvi!|Nothing here yet. Be the first!',noev:'Ni dogodkov.|No events.',
+login:'Prijava|Log in',signup:'Registracija|Sign up',email:'E-pošta|Email',pw:'Geslo|Password',name:'Ime|Name',
+code:'Vabilna koda (neobvezno)|Invite code (optional)',sub:'Zasebno omrežje za ožje prijatelje|A private network for close friends',
+pend:'Čakaš na odobritev administratorja. Stran se osveži sama.|Waiting for admin approval. This page updates by itself.',
+out:'Odjava|Log out',lang:'Jezik|Language',theme:'Tema|Theme',mem:'Člani|Members',inv:'Vabilna koda|Invite code',
+ok:'Odobri|Approve',rej:'Zavrni|Reject',full:'Krog je poln (20 članov).|The circle is full (20 members).',
+del:'Izbrisati?|Delete?',cm:'Komentiraj…|Comment…',ask:'Prošnje za vstop|Join requests',nc:'Nova koda|New code',
+soon:'Prihaja|Upcoming',when:'Termin|Date poll',pw:'Dodaj naslov in vsaj 2 termina|Add a title and at least 2 dates',past:'Minilo|Past',hint:'Namesti: v brskalniku izberi »Dodaj na začetni zaslon«.|Install: choose “Add to Home Screen” in your browser.',cp:'Kopirano|Copied',now:'zdaj|now',pq:'Dodaj vprašanje in vsaj 2 možnosti|Add a question and at least 2 options',pe:'Dodaj naslov in datum|Add a title and date'};
+let L=localStorage.l||(navigator.language.startsWith('sl')?'sl':'en'),th=localStorage.th||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+const t=k=>(S[k]||k).split('|')[L=='sl'?0:1],$=q=>document.querySelector(q),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+document.documentElement.dataset.t=th;
+let me,users={},posts=[],chat=[],cfg={},tab='home',open={},unsubs=[],am='li',room='all',cu=null,rp=null,sel=null,cm={type:'post',img:null};
+const er=x=>toast(x.message);const rnd=()=>Math.random().toString(36).slice(2,8).toUpperCase(),LS=k=>+localStorage['s_'+k]||0;
+const toast=m=>{const e=$('#toast');e.textContent=m;e.style.opacity=1;setTimeout(()=>e.style.opacity=0,2400)};
+const av=u=>`<div class="av" style="background:${u.color||'#2f5bff'}">${esc((u.name||'?')[0].toUpperCase())}</div>`;
+const ago=ts=>{const s=(Date.now()-ts)/1e3;return s<60?t('now'):s<3600?Math.floor(s/60)+' min':s<86400?Math.floor(s/3600)+' h':new Date(ts).toLocaleDateString(L,{day:'numeric',month:'short'})};
+const shrink=f=>new Promise(r=>{const i=new Image;i.onload=()=>{const k=Math.min(1,900/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);r(c.toDataURL('image/jpeg',.6))};i.src=URL.createObjectURL(f)});
+// ikona + manifest (PWA)
+(()=>{const c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');x.fillStyle='#2f5bff';x.fillRect(0,0,512,512);x.strokeStyle='#fff';x.lineWidth=52;x.beginPath();x.arc(256,256,118,0,7);x.stroke();x.fillStyle='#ffd84d';x.beginPath();x.arc(352,160,34,0,7);x.fill();const u=c.toDataURL();$('#fav').href=u;$('#ati').href=u;
+$('#mf').href=URL.createObjectURL(new Blob([JSON.stringify({name:'Krog',short_name:'Krog',display:'standalone',start_url:location.href.split('#')[0],background_color:'#2f5bff',theme_color:'#2f5bff',icons:[{src:u,sizes:'512x512',type:'image/png'}]})],{type:'application/json'}))})();
+
+function authUI(m){am=m||'li';const su=am=='su';$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><div class="mu" style="margin-bottom:8px">${t('sub')}</div>${su?`<input id=n placeholder="${t('name')}">`:''}<input id=e type=email placeholder="${t('email')}"><input id=p type=password placeholder="${t('pw')}">${su?`<input id=c placeholder="${t('code')}">`:''}<button class=cta data-a="${su?'su':'li'}">${t(su?'signup':'login')}</button><button class=chip data-a="${su?'toli':'tosu'}">${t(su?'login':'signup')}</button><button class=chip data-a=lang>🌐 ${L.toUpperCase()}</button></div>`}
+async function signup(){const n=$('#n').value.trim(),e=$('#e').value,p=$('#p').value,c=$('#c').value.trim().toUpperCase();if(!n)return toast(t('name'));
+const cr=await auth.createUserWithEmailAndPassword(e,p);let role='member',status='pending';const cd=await db.doc('config/app').get();
+const uid=cr.user.uid,d={name:n,role,status,color:'hsl('+Math.floor(Math.random()*360)+' 55% 48%)',ts:Date.now()};
+if(!cd.exists){d.role='admin';d.status='active';await db.doc('users/'+uid).set(d);await db.doc('config/app').set({code:rnd()});return}
+if(c&&c==cd.data().code){const k=(await db.collection('users').where('status','==','active').get()).size;if(k<20){d.status='active';d.code=c}else toast(t('full'))}
+await db.doc('users/'+uid).set(d)}
+
+if(!ok||!FB.apiKey)setup();else auth.onAuthStateChanged(u=>{unsubs.forEach(f=>f());unsubs=[];cu&&cu();cu=null;$('#app').innerHTML='';if(!u){me=null;return authUI(am)}
+unsubs.push(db.doc('users/'+u.uid).onSnapshot(d=>{if(!d.exists)return;me={...d.data(),id:u.uid};
+if(me.status!='active'){$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><p>${t('pend')}</p><button class=chip data-a=out>${t('out')}</button></div>`;return}
+if(!$('#main')){shell();sub()}render()}))});
+function shell(){$('#app').innerHTML=`<header><i></i>Krog</header><main id=main></main><div id=cb></div><nav>${[['home','🏠'],['ev','📅'],['chat','💬'],['gal','🖼️'],['me','👤']].map(([k,i])=>`<button data-a=tab data-k=${k}><b>${i}</b>${t(k)}<i id=bd_${k} hidden></i></button>`).join('')}</nav><button class=fab data-a=new id=fab>＋</button>`}
+function setup(){$('#app').innerHTML=`<div class="auth"><h1>Krog</h1><div class=card><b>⚙️ Firebase</b><p style="margin-top:8px">${L=='sl'?'Aplikacija še nima Firebase nastavitev. Odpri datoteko v urejevalniku in v FB (na vrhu skripte) vpiši svoj config. Če je že vpisan, preveri internetno povezavo (SDK se nalaga iz gstatic.com).':'The app has no Firebase config yet. Open the file in an editor and fill in FB (top of the script). If it is filled in, check your connection (the SDK loads from gstatic.com).'}</p></div></div>`}
+addEventListener('error',e=>toast(e.message));
+function sub(){unsubs.push(
+db.collection('users').onSnapshot(s=>{users={};s.forEach(d=>users[d.id]={...d.data(),id:d.id});render()},er),
+db.doc('config/app').onSnapshot(d=>{cfg=d.data()||{};render()},er),
+db.collection('posts').orderBy('ts','desc').limit(60).onSnapshot(s=>{posts=s.docs.map(d=>({...d.data(),id:d.id}));render()},er));listen()}
+function listen(){cu&&cu();chat=[];cu=db.collection('rooms/'+room+'/msgs').orderBy('ts','desc').limit(100).onSnapshot(s=>{chat=s.docs.map(d=>({...d.data(),id:d.id})).reverse();render()},er)}
+const rid=(a,b)=>[a,b].sort().join('_'),E=['👍','❤️','😂','😮'];
+function sendMsg(v,img){const d={uid:me.id,name:me.name,text:v,ts:Date.now()};if(img)d.img=img;if(rp)d.rp=rp.text||'📷';rp=null;return db.collection('rooms/'+room+'/msgs').add(d)}
+function msgHtml(c){const mine=c.uid==me.id,rs={};Object.values(c.re||{}).forEach(e=>rs[e]=(rs[e]||0)+1);
+return `<div class="msg ${mine?'me':''}" data-a=mo data-id=${c.id}>${mine?'':`<span class=mu>${esc(c.name)}</span>`}<p>${c.rp?`<small style="display:block;opacity:.7;border-left:3px solid var(--y);padding-left:6px;margin-bottom:4px">${esc(c.rp)}</small>`:''}${c.img?`<img src="${c.img}" style="max-width:100%;border-radius:12px;display:block;margin-bottom:4px" data-a=zoomc data-id=${c.id}>`:''}${esc(c.text)}</p>${Object.keys(rs).length?`<span class=mu>${Object.entries(rs).map(([e,n])=>e+n).join(' ')}</span>`:''}${sel==c.id?`<div class=act>${E.map(e=>`<button data-a=re data-id=${c.id} data-e=${e}>${e}</button>`).join('')}<button data-a=rpl data-id=${c.id}>↩️</button></div>`:''}</div>`}
+function card(p){const u=users[p.uid]||{name:p.name},lk=(p.likes||[]).includes(me.id),cs=p.comments||[],id=p.id;
+let b=p.text?`<div style="margin-top:10px;white-space:pre-wrap;word-break:break-word">${esc(p.text)}</div>`:'';
+if(p.type=='poll'){const v=p.votes||{},tot=Object.keys(v).length;b+=`<div style="margin-top:10px;font-weight:700">${esc(p.q)}</div>`+p.opts.map((o,i)=>{const n=Object.values(v).filter(x=>x==i).length;return `<div class=bar data-a=vote data-id=${id} data-i=${i}><u style="width:${tot?n*100/tot:0}%"></u><p><span>${esc(o)}${v[me.id]==i?' ✓':''}</span><span>${n}</span></p></div>`}).join('')}
+if(p.type=='event'){const r=p.rsvp||{},go=Object.keys(r).filter(k=>r[k]=='yes');
+b=`<div style="margin-top:10px;font-size:18px;font-weight:800">📅 ${esc(p.title)}</div><div class=mu>${new Date(p.date).toLocaleString(L,{weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'})}</div>`+b+`<div class=act><button class="${r[me.id]=='yes'?'on':''}" data-a=rsvp data-id=${id} data-v=yes>✅ ${t('yes')} (${go.length})</button><button class="${r[me.id]=='no'?'on':''}" data-a=rsvp data-id=${id} data-v=no>✖ ${t('no')}</button><button data-a=ics data-id=${id}>📆</button></div>`+(go.length?`<div class=mu style="margin-top:6px">${go.map(k=>esc((users[k]||{}).name)).join(', ')}</div>`:'')}
+if(p.type=='when'){const v=p.votes||{},cn=p.opts.map((o,i)=>Object.values(v).filter(a=>a.includes(i)).length),mx=Math.max(...cn),nu=Object.values(users).filter(u=>u.status=='active').length||1;
+b=`<div style="margin-top:10px;font-size:18px;font-weight:800">🗓 ${esc(p.title)}</div>`+b+p.opts.map((o,i)=>`<div class=bar data-a=free data-id=${id} data-i=${i}><u style="width:${cn[i]*100/nu}%"></u><p><span>${(v[me.id]||[]).includes(i)?'✅ ':''}${cn[i]&&cn[i]==mx?'🏆 ':''}${new Date(o).toLocaleString(L,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span><span>${cn[i]}</span></p></div>`).join('')}
+if(p.img)b+=`<img class=ph src="${p.img}" data-a=zoom data-id=${id}>`;
+return `<div class=card><div class=row>${av(u)}<div style="flex:1"><b>${esc(u.name)}</b><div class=mu>${ago(p.ts)}</div></div>${p.uid==me.id?`<button class=chip data-a=del data-id=${id}>🗑</button>`:''}</div>${b}<div class=act><button class="${lk?'on':''}" data-a=like data-id=${id}>${lk?'❤️':'🤍'} ${(p.likes||[]).length||''}</button><button data-a=cmt data-id=${id}>💬 ${cs.length||''}</button></div>${open[id]?`<div>${cs.map(c=>`<div class=cm><b>${esc(c.name)}</b> ${esc(c.text)}</div>`).join('')}<div class=row style="margin-top:8px"><input id=ci_${id} placeholder="${t('cm')}" autocomplete=off><button class=chip data-a=cs data-id=${id}>➤</button></div></div>`:''}</div>`}
+
+function meView(){const ac=Object.values(users).filter(u=>u.status=='active'),pe=Object.values(users).filter(u=>u.status=='pending'),ad=me.role=='admin';
+return `<div class=card><div class=row>${av(me)}<div><b>${esc(me.name)}</b><div class=mu>${ad?'Admin':''}</div></div></div><div class=act><button data-a=lang>🌐 ${t('lang')}: ${L.toUpperCase()}</button><button data-a=theme>${th=='dark'?'☀️':'🌙'} ${t('theme')}</button><button data-a=out>${t('out')}</button></div></div>`
++(ad?`<div class=card><b>${t('inv')}</b><div class=row style="margin-top:8px"><input readonly value="${esc(cfg.code||'')}" style="font-weight:800;letter-spacing:3px"><button class=chip data-a=cpc>📋</button><button class=chip data-a=nc>${t('nc')}</button></div></div>`:'')
++(ad&&pe.length?`<div class=card><b>${t('ask')}</b>${pe.map(u=>`<div class=row style="margin-top:10px">${av(u)}<span style="flex:1">${esc(u.name)}</span><button class=chip data-a=ap data-id=${u.id}>${t('ok')}</button><button class=chip data-a=rj data-id=${u.id}>${t('rej')}</button></div>`).join('')}</div>`:'')
++`<div class=card><b>${t('mem')} (${ac.length}/20)</b>${ac.map(u=>`<div class=row style="margin-top:10px">${av(u)}<span>${esc(u.name)}</span></div>`).join('')}</div><p class=mu style="padding:4px 6px">${t('hint')}</p>`}
+
+function render(){if(!me||me.status!='active'||!$('#main'))return;const m=$('#main'),emp=`<p class=mu style="text-align:center;margin-top:60px">${t('empty')}</p>`;
+document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.k==tab));
+$('#fab').style.display=['home','ev','gal'].includes(tab)?'':'none';
+const cb=$('#cb');if(tab=='chat'){if(!$('#ci'))cb.innerHTML=`<div id=rpv class=mu data-a=rpx style="width:100%"></div><label class=chip style="cursor:pointer">📷<input type=file accept="image/*" id=fc hidden></label><input id=ci placeholder="${t('msg')}" autocomplete=off style="flex:1;width:auto"><button class=cta data-a=sc style="width:auto;padding:0 20px">➤</button>`}else cb.innerHTML='';
+const un={home:posts.filter(p=>p.ts>LS('home')&&p.uid!=me.id).length,chat:chat.filter(c=>c.ts>LS('chat')&&c.uid!=me.id).length};
+for(const k in un){const n=k==tab?0:un[k],b=$('#bd_'+k);if(b){b.hidden=!n;b.textContent=n}if(k==tab)localStorage['s_'+k]=Date.now()}
+let h='';
+if(tab=='home')h=posts.map(card).join('')||emp;
+if(tab=='ev'){const ev=posts.filter(p=>p.type=='event').sort((a,b)=>new Date(a.date)-new Date(b.date)),lim=Date.now()-108e5,up=ev.filter(e=>new Date(e.date)>=lim),ps=ev.filter(e=>new Date(e.date)<lim).reverse();
+h=up.map(card).join('')+(ps.length?`<div class=mu style="margin:18px 4px 0">${t('past')}</div>`+ps.map(card).join(''):'');if(!h)h=`<p class=mu style="text-align:center;margin-top:60px">${t('noev')}</p>`}
+if(tab=='gal'){const g=posts.filter(p=>p.img);h=g.length?`<div class=gal>${g.map(p=>`<img src="${p.img}" data-a=zoom data-id=${p.id}>`).join('')}</div>`:emp}
+if(tab=='chat'){const ms=chat.map(msgHtml).join('');h=`<div class=act style="margin:0 0 8px;flex-wrap:nowrap;overflow-x:auto"><button class="${room=='all'?'on':''}" data-a=room data-r=all>👥 ${L=='sl'?'Vsi':'All'}</button>${Object.values(users).filter(u=>u.status=='active'&&u.id!=me.id).map(u=>{const r=rid(me.id,u.id);return `<button class="${room==r?'on':''}" data-a=room data-r=${r}>${esc(u.name)}</button>`}).join('')}</div>`+(ms||emp)}
+if(tab=='me')h=meView();
+const ae=document.activeElement,keep=ae&&ae.id&&m.contains(ae)?[ae.id,ae.value,ae.selectionStart]:null,top=m.scrollTop;
+m.innerHTML=h;if(tab=='chat'&&$('#rpv'))$('#rpv').textContent=rp?'↩️ '+(rp.text||'📷')+'   ✕':'';m.scrollTop=tab=='chat'?m.scrollHeight:top;
+if(keep){const n=document.getElementById(keep[0]);if(n){n.value=keep[1];n.focus();n.setSelectionRange(keep[2],keep[2])}}}
+
+function sheet(h){$('.sheet')?.remove();const d=document.createElement('div');d.className='sheet';d.dataset.a='x';d.innerHTML='<div>'+h+'</div>';document.body.appendChild(d)}
+function composer(){const ty=cm.type;sheet(`<div class=row style="gap:6px">${['post','poll','event','when'].map(k=>`<button class="chip ${k==ty?'on':''}" data-a=ct data-k=${k}>${t(k)}</button>`).join('')}</div>
+${ty=='event'?`<input id=evt placeholder="${t('evt')}"><input id=evd type=datetime-local>`:''}
+${ty=='when'?`<input id=evt placeholder="${t('evt')}">${[1,2,3,4].map(()=>'<input class=wd type=datetime-local>').join('')}`:''}${ty=='poll'?`<input id=pq placeholder="${t('q')}">${[1,2,3,4].map(i=>`<input class=po placeholder="${t('opt')} ${i}">`).join('')}`:''}
+<textarea id=tx rows=3 placeholder="${t('txt')}"></textarea><img id=pv class=ph style="display:none;margin:0">
+<div class=row><label class=chip>${t('photo')}<input type=file accept="image/*" id=fi hidden></label><span style="flex:1"></span><button class=cta style="width:auto;padding:12px 26px" data-a=pub>${t('send')}</button></div>`);
+$('#tx').value=cm.text||'';if(cm.img){$('#pv').src=cm.img;$('#pv').style.display='block'}}
+
+const P=id=>db.doc('posts/'+id),A={
+li:()=>auth.signInWithEmailAndPassword($('#e').value,$('#p').value),su:signup,tosu:()=>authUI('su'),toli:()=>authUI('li'),out:()=>auth.signOut(),
+lang:()=>{L=L=='sl'?'en':'sl';localStorage.l=L;if($('#main')){shell();render()}else authUI(am)},
+theme:()=>{th=th=='dark'?'light':'dark';localStorage.th=th;document.documentElement.dataset.t=th;render()},
+tab:el=>{tab=el.dataset.k;$('#cb').innerHTML='';render();if(tab!='chat')$('#main').scrollTop=0},
+new:()=>{cm={type:tab=='ev'?'event':'post',img:null};composer()},
+ct:el=>{cm.text=$('#tx').value;cm.type=el.dataset.k;composer()},
+pub:async()=>{const ty=cm.type,text=$('#tx').value.trim(),d={uid:me.id,name:me.name,type:ty,text,ts:Date.now(),likes:[],comments:[]};if(cm.img)d.img=cm.img;
+if(ty=='poll'){d.q=$('#pq').value.trim();d.opts=[...document.querySelectorAll('.po')].map(i=>i.value.trim()).filter(Boolean);d.votes={};if(!d.q||d.opts.length<2)return toast(t('pq'))}
+if(ty=='event'){d.title=$('#evt').value.trim();d.date=$('#evd').value;d.rsvp={};if(!d.title||!d.date)return toast(t('pe'))}
+if(ty=='when'){d.title=$('#evt').value.trim();d.opts=[...document.querySelectorAll('.wd')].map(i=>i.value).filter(Boolean);d.votes={};if(!d.title||d.opts.length<2)return toast(t('pw'))}
+if(ty=='post'&&!text&&!cm.img)return;await db.collection('posts').add(d);$('.sheet').remove();cm={type:'post',img:null}},
+like:(el,id)=>P(id).update({likes:(posts.find(x=>x.id==id).likes||[]).includes(me.id)?F.arrayRemove(me.id):F.arrayUnion(me.id)}),
+vote:(el,id)=>P(id).update({['votes.'+me.id]:+el.dataset.i}),
+rsvp:(el,id)=>P(id).update({['rsvp.'+me.id]:el.dataset.v}),
+del:(el,id)=>confirm(t('del'))&&P(id).delete(),
+cmt:(el,id)=>{open[id]=!open[id];render()},
+cs:(el,id)=>{const i=$('#ci_'+id),v=i.value.trim();if(v){i.value='';return P(id).update({comments:F.arrayUnion({uid:me.id,name:me.name,text:v,ts:Date.now()})})}},
+sc:()=>{const i=$('#ci'),v=i.value.trim();if(v){i.value='';return sendMsg(v)}},
+room:el=>{room=el.dataset.r;sel=null;rp=null;listen()},
+mo:(el,id)=>{sel=sel==id?null:id;render()},
+re:(el,id)=>{sel=null;return db.doc('rooms/'+room+'/msgs/'+id).update({['re.'+me.id]:el.dataset.e})},
+rpl:(el,id)=>{rp=chat.find(c=>c.id==id);sel=null;render();$('#ci')?.focus()},
+rpx:()=>{rp=null;render()},
+zoomc:(el,id)=>sheet(`<img class=ph src="${chat.find(c=>c.id==id).img}" style="margin:0"><button class=chip data-a=x>✕</button>`),
+free:(el,id)=>{const i=+el.dataset.i,v=(posts.find(x=>x.id==id).votes||{})[me.id]||[];return P(id).update({['votes.'+me.id]:v.includes(i)?v.filter(x=>x!=i):[...v,i]})},
+ics:(el,id)=>{const p=posts.find(x=>x.id==id),d=new Date(p.date),f=x=>x.toISOString().replace(/[-:]|\.\d+/g,''),s='BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:'+id+'\nDTSTAMP:'+f(new Date)+'\nDTSTART:'+f(d)+'\nDTEND:'+f(new Date(+d+72e5))+'\nSUMMARY:'+p.title+'\nEND:VEVENT\nEND:VCALENDAR',a=document.createElement('a');a.href=URL.createObjectURL(new Blob([s],{type:'text/calendar'}));a.download='krog.ics';a.click()},
+zoom:(el,id)=>sheet(`<img class=ph src="${posts.find(p=>p.id==id).img}" style="margin:0"><button class=chip data-a=x>✕</button>`),
+x:(el,id,e)=>{if(e.target==el||el.tagName=='BUTTON')$('.sheet')?.remove()},
+nc:()=>db.doc('config/app').update({code:rnd()}),cpc:()=>{navigator.clipboard?.writeText(cfg.code);toast(t('cp'))},
+ap:async(el,id)=>{if(Object.values(users).filter(u=>u.status=='active').length>=20)return toast(t('full'));await db.doc('users/'+id).update({status:'active'})},
+rj:(el,id)=>db.doc('users/'+id).update({status:'rejected'})};
+document.addEventListener('click',async e=>{const el=e.target.closest('[data-a]');if(!el)return;try{await A[el.dataset.a]?.(el,el.dataset.id,e)}catch(x){toast(x.message)}});
+document.addEventListener('keydown',e=>{if(e.key!='Enter'||e.shiftKey)return;const i=e.target.id||'';if(i=='ci')A.sc();else if(i.startsWith('ci_'))A.cs(null,i.slice(3));else if(i=='p'||i=='c')A[am=='su'?'su':'li']().catch(x=>toast(x.message))});
+document.addEventListener('change',async e=>{if(e.target.id=='fc'&&e.target.files[0]){const im=await shrink(e.target.files[0]);e.target.value='';sendMsg('',im)}if(e.target.id=='fi'&&e.target.files[0]){cm.img=await shrink(e.target.files[0]);$('#pv').src=cm.img;$('#pv').style.display='block'}});
+</script></body></html>
